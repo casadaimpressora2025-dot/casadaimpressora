@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casa da Impressora | Assistência Técnica</title>
+
+<title>Casa da Impressora | Assistência Técnica e Impressão em Crato - CE</title>
+
+<meta name="description" content="Casa da Impressora oferece assistência técnica especializada em impressoras, manutenção, limpeza técnica, impressões, adesivos, encadernação e personalização em Crato - CE.">
+<meta name="keywords" content="assistência técnica impressora, manutenção de impressoras, impressão, encadernação, adesivos, personalização, Crato CE">
+<meta name="author" content="Casa da Impressora">
 
 <style>
 :root {
+    --preto: #000;
     --azul: #0b3c5d;
     --dourado: #e1c16e;
-    --cinza: #f4f6f8;
-    --preto: #111;
-}
-
-* {
-    box-sizing: border-box;
+    --cinza: #f2f2f2;
 }
 
 body {
@@ -24,11 +25,11 @@ body {
     color: #333;
 }
 
-/* ================= HEADER ================= */
+/* TOPO */
 header {
     background: #fff;
-    border-bottom: 3px solid var(--dourado);
-    padding: 25px 20px;
+    padding: 20px;
+    border-bottom: 4px solid var(--dourado);
 }
 
 .topo {
@@ -36,121 +37,88 @@ header {
     margin: auto;
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 20px;
 }
 
+/* LOGO */
 .logo img {
-    width: 170px;
+    width: 180px;
 }
 
-/* ================= BANNER ================= */
+/* BANNER */
 .banner {
     flex: 1;
-    height: 260px; /* aumentado */
-    border-radius: 18px;
-    background: url("banner.jpg") center/cover no-repeat;
-    position: relative;
+    height: 260px;
+    background: #eaeaea;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
 }
 
-/* arco dourado decorativo */
-.banner::after {
-    content: "";
-    position: absolute;
-    right: -90px;
-    top: -90px;
-    width: 320px;
-    height: 320px;
-    border: 12px solid var(--dourado);
-    border-radius: 50%;
+.banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-/* ================= TEXTO INSTITUCIONAL ================= */
-.intro {
-    text-align: center;
-    font-weight: bold;
-    color: #555;
-    margin: 20px auto 0;
-    max-width: 900px;
-}
-
-/* ================= SEÇÕES ================= */
+/* CONTEÚDO */
 section {
-    max-width: 950px;
-    margin: 40px auto;
+    max-width: 900px;
+    margin: 30px auto;
     padding: 35px;
     background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    border-radius: 10px;
 }
 
 h2 {
     color: var(--azul);
     border-left: 6px solid var(--dourado);
-    padding-left: 14px;
-    margin-bottom: 25px;
+    padding-left: 12px;
+    margin-bottom: 20px;
 }
 
-/* ================= SERVIÇOS ================= */
-ul {
-    list-style: none;
-    padding: 0;
+p {
+    line-height: 1.7;
+    font-size: 16px;
 }
 
-ul li {
-    padding: 14px 0 14px 34px;
-    border-bottom: 1px solid #e2e2e2;
-    position: relative;
-}
-
-ul li::before {
-    content: "✔";
-    position: absolute;
-    left: 0;
-    color: #2ecc71;
-    font-weight: bold;
-}
-
-/* ================= BOTÕES ================= */
+/* BOTÕES */
 .buttons {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
     justify-content: center;
+    margin-top: 20px;
 }
 
 .buttons a {
     text-decoration: none;
     color: #fff;
-    padding: 15px 30px;
-    border-radius: 40px;
+    padding: 15px 28px;
+    border-radius: 6px;
     font-weight: bold;
-    transition: transform .2s, opacity .2s;
-}
-
-.buttons a:hover {
-    transform: translateY(-3px);
-    opacity: 0.9;
+    font-size: 16px;
 }
 
 .whatsapp { background: #25D366; }
 .instagram { background: #C13584; }
 .email { background: var(--azul); }
 
-/* ================= RODAPÉ ================= */
+/* RODAPÉ */
 footer {
     background: var(--preto);
     color: #fff;
     text-align: center;
-    padding: 20px;
+    padding: 18px;
     font-size: 14px;
 }
 
-/* ================= RESPONSIVO ================= */
+/* RESPONSIVO */
 @media (max-width: 768px) {
     .topo {
         flex-direction: column;
-        text-align: center;
     }
 
     .banner {
@@ -163,34 +131,46 @@ footer {
 
 <body>
 
-<!-- HEADER -->
 <header>
     <div class="topo">
         <div class="logo">
             <img src="logo.png" alt="Casa da Impressora">
         </div>
-        <div class="banner"></div>
+
+        <div class="banner">
+            <!-- Salve sua imagem como banner.jpg -->
+            <img src="banner.jpg" alt="Assistência Técnica em Impressoras">
+        </div>
     </div>
 </header>
 
-<p class="intro">
-Assistência técnica especializada em impressoras e soluções gráficas em Crato e região.
-</p>
-
-<!-- SERVIÇOS -->
 <section>
-    <h2>🖨️ Nossos Serviços</h2>
-    <ul>
-        <li>Manutenção preventiva e corretiva em impressoras</li>
-        <li>Limpeza técnica e desobstrução de cabeçotes</li>
-        <li>Reparo avançado em sistemas de impressão</li>
-        <li>Instalação e configuração de sistemas de tinta contínua</li>
-        <li>Impressões, adesivos e encadernações</li>
-        <li>Personalização e impressão sob demanda</li>
-    </ul>
+    <h2>Casa da Impressora – Soluções completas em impressão</h2>
+
+    <p>
+        A <strong>Casa da Impressora</strong> é referência em assistência técnica especializada em impressoras.
+        Trabalhamos com experiência, agilidade e compromisso para garantir que seu equipamento funcione sempre
+        com o melhor desempenho.
+    </p>
+
+    <p>
+        Oferecemos manutenção preventiva e corretiva, limpeza técnica e desobstrução de cabeçotes, além de
+        reparos avançados em sistemas de impressão, resolvendo desde problemas simples até os mais complexos.
+        Também realizamos a instalação e configuração de sistemas de tinta contínua, trazendo mais economia
+        e eficiência para o seu dia a dia.
+    </p>
+
+    <p>
+        Além da parte técnica, contamos com serviços completos de impressões em geral, adesivos,
+        encadernações e personalização sob demanda, atendendo tanto clientes residenciais quanto empresas.
+    </p>
+
+    <p>
+        Na <strong>Casa da Impressora</strong>, seu equipamento está em boas mãos.
+        Aqui, você encontra qualidade, confiança e soluções rápidas para não deixar seu trabalho parar.
+    </p>
 </section>
 
-<!-- CONTATO -->
 <section>
     <h2>📞 Fale Conosco</h2>
     <div class="buttons">
@@ -201,7 +181,7 @@ Assistência técnica especializada em impressoras e soluções gráficas em Cra
 </section>
 
 <footer>
-    © 2026 • Casa da Impressora • Crato - CE
+    © 2026 Casa da Impressora — Assistência Técnica e Impressão em Crato - CE
 </footer>
 
 </body>
