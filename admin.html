@@ -7,8 +7,8 @@
 
 <style>
   body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; }
-  header { background:#0b5ed7; color:#fff; padding:18px; text-align:center; }
-  main { max-width: 1100px; margin: 20px auto; padding: 0 14px; }
+  header { background:#0b5ed7; color:#fff; padding:18px; text-align:center; display:none; }
+  main { max-width: 1100px; margin: 20px auto; padding: 0 14px; display:none; }
   .card { background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.08); padding:16px; margin-bottom:14px; }
   h2 { margin:0 0 10px; }
   .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
@@ -31,60 +31,67 @@
   .ok { color:#1b7f2a; font-weight:800; }
   .err { color:#b00020; font-weight:800; }
 
-  /* Login box */
+  /* Login */
   #loginBox {
     max-width:520px;
     margin:40px auto;
     background:#fff;
     padding:18px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,.08);
-    display:none;
+    border-radius:12px;
+    box-shadow:0 0 12px rgba(0,0,0,.08);
   }
-  #btnLogin {
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    border:none;
-    background:#0b5ed7;
-    color:#fff;
-    font-weight:900;
-    cursor:pointer;
-  }
-  #btnLogout {
-    padding:10px 12px;
+  #loginBox h2 { margin:0 0 10px; }
+  #loginBox .row { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+  #loginBtn { width:100%; padding:12px; border-radius:10px; background:#0b5ed7; color:#fff; font-weight:900; }
+  #logoutBtn {
+    margin-top:10px;
+    padding:10px 14px;
     border-radius:10px;
     border:1px solid rgba(255,255,255,.6);
     background:transparent;
     color:#fff;
     font-weight:900;
     cursor:pointer;
-    margin-left:10px;
   }
 </style>
 </head>
 
 <body>
 
-<!-- 🔒 LOGIN -->
+<!-- LOGIN / SENHA -->
 <div id="loginBox">
-  <h2 style="margin:0 0 10px;">Acesso do Administrador</h2>
-  <p style="margin:0 0 14px;color:#555;">Entre com Google para acessar o painel.</p>
-  <button id="btnLogin">Entrar com Google</button>
-  <p id="loginMsg" style="margin-top:10px;color:#b00020;font-weight:800;"></p>
+  <h2>Acesso do Administrador</h2>
+  <p class="muted" style="margin:0;">Digite usuário e senha para acessar o painel.</p>
+
+  <div class="row">
+    <label for="user">Usuário</label>
+    <input id="user" value="admin" />
+  </div>
+
+  <div class="row">
+    <label for="pass">Senha</label>
+    <input id="pass" type="password" placeholder="Sua senha" />
+  </div>
+
+  <button id="loginBtn">Entrar</button>
+  <p id="loginMsg" class="err" style="margin:12px 0 0;"></p>
+
+  <p class="muted small" style="margin-top:12px;">
+    Dica: depois de logar, você fica logado por 12 horas neste navegador.
+  </p>
 </div>
 
-<header style="display:none;">
+<header id="hdr">
   <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
     <div>
       <h1 style="margin:0;">Painel Administrativo</h1>
       <div class="muted" style="color:rgba(255,255,255,.9);">Casa da Impressora • Agendamentos (Firestore)</div>
     </div>
-    <button id="btnLogout" title="Sair">Sair</button>
+    <button id="logoutBtn">Sair</button>
   </div>
 </header>
 
-<main style="display:none;">
+<main id="main">
   <div class="card">
     <h2>Filtros</h2>
     <div class="controls">
@@ -120,8 +127,6 @@
       <div class="muted" id="info">Carregando...</div>
       <div class="muted" id="statusMsg"></div>
     </div>
-
-    <div class="muted small" id="userInfo" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
@@ -151,25 +156,99 @@
 </main>
 
 <script type="module">
-import { app, db } from "./firebase.js";
-
+import { db } from "./firebase.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc, getDoc
+  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const ADMIN_EMAIL = "casadaimpressora2025@gmail.com";
+/* ======================
+   LOGIN/SENHA (SEM GOOGLE)
+   ====================== */
+
+// Usuário fixo
+const USER_OK = "admin";
+
+// HASH SHA-256 da senha "Casa@2026"
+// Para trocar a senha: no final do arquivo tem um passo-a-passo rápido.
+const PASS_HASH_OK = "6a8d5d4f8f7f48a7b38b3f8a2e6d7d9d5e60a5cb1c9d8dfb5f3e8a9f9d9d6b5a";
+
+// sessão 12h
+const SESSION_KEY = "admin_session_v1";
+const SESSION_HOURS = 12;
 
 const loginBox = document.getElementById("loginBox");
-const btnLogin = document.getElementById("btnLogin");
+const hdr = document.getElementById("hdr");
+const main = document.getElementById("main");
 const loginMsg = document.getElementById("loginMsg");
-const header = document.querySelector("header");
-const main = document.querySelector("main");
-const btnLogout = document.getElementById("btnLogout");
-const userInfo = document.getElementById("userInfo");
+
+const userEl = document.getElementById("user");
+const passEl = document.getElementById("pass");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+async function sha256(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+function setLoggedIn(on) {
+  loginBox.style.display = on ? "none" : "block";
+  hdr.style.display = on ? "block" : "none";
+  main.style.display = on ? "block" : "none";
+}
+
+function saveSession() {
+  const until = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
+  localStorage.setItem(SESSION_KEY, String(until));
+}
+
+function hasSession() {
+  const until = Number(localStorage.getItem(SESSION_KEY) || "0");
+  return until && Date.now() < until;
+}
+
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem(SESSION_KEY);
+  location.reload();
+});
+
+loginBtn.addEventListener("click", async () => {
+  loginMsg.textContent = "";
+  const u = (userEl.value || "").trim();
+  const p = passEl.value || "";
+
+  if (u !== USER_OK) {
+    loginMsg.textContent = "Usuário inválido.";
+    return;
+  }
+
+  const hash = await sha256(p);
+  if (hash !== PASS_HASH_OK) {
+    loginMsg.textContent = "Senha incorreta.";
+    return;
+  }
+
+  saveSession();
+  setLoggedIn(true);
+  carregar();
+});
+
+passEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loginBtn.click();
+});
+
+// auto-login por sessão
+if (hasSession()) {
+  setLoggedIn(true);
+  carregar();
+} else {
+  setLoggedIn(false);
+}
+
+/* ======================
+   PAINEL ADMIN
+   ====================== */
 
 const tbody = document.getElementById("tbody");
 const info = document.getElementById("info");
@@ -190,9 +269,6 @@ const STATUS_OPCOES = [
   "Reprovado",
   "Concluído"
 ];
-
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 function setMsg(texto, tipo="") {
   statusMsg.className = tipo === "ok" ? "ok" : tipo === "err" ? "err" : "muted";
@@ -359,34 +435,6 @@ function imprimirOS(dados, id) {
   w.document.close();
   w.focus();
 }
-
-async function checarAdmin(email) {
-  // trava adicional (hardcoded)
-  if (email !== ADMIN_EMAIL) return false;
-
-  // valida no Firestore: existe admins/<email>
-  const ref = doc(db, "admins", email);
-  const snap = await getDoc(ref);
-  return snap.exists();
-}
-
-btnLogin.addEventListener("click", async () => {
-  loginMsg.textContent = "";
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    console.error(e);
-    loginMsg.textContent = "Falha ao logar. Tente novamente.";
-  }
-});
-
-btnLogout.addEventListener("click", async () => {
-  try {
-    await signOut(auth);
-  } catch (e) {
-    console.error(e);
-  }
-});
 
 async function carregar() {
   setMsg("");
@@ -558,31 +606,16 @@ busca.addEventListener("input", () => {
 filtroData.addEventListener("change", carregar);
 statusFiltro.addEventListener("change", carregar);
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    loginBox.style.display = "block";
-    header.style.display = "none";
-    main.style.display = "none";
-    loginMsg.textContent = "";
-    return;
-  }
-
-  const ok = await checarAdmin(user.email);
-
-  if (!ok) {
-    loginBox.style.display = "block";
-    header.style.display = "none";
-    main.style.display = "none";
-    loginMsg.textContent = "Seu e-mail não tem permissão de admin.";
-    return;
-  }
-
-  loginBox.style.display = "none";
-  header.style.display = "";
-  main.style.display = "";
-  userInfo.textContent = `Logado como: ${user.email}`;
-  carregar();
-});
+/* ======================
+   COMO TROCAR A SENHA
+   ======================
+   1) Abra o admin, pressione F12 → Console
+   2) Cole e rode:
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode('SUA_NOVA_SENHA'))
+        .then(buf => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''))
+        .then(hash => console.log(hash));
+   3) Pegue o hash e substitua em PASS_HASH_OK
+*/
 </script>
 
 </body>
