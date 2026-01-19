@@ -30,29 +30,61 @@
   .small { font-size:12px; }
   .ok { color:#1b7f2a; font-weight:800; }
   .err { color:#b00020; font-weight:800; }
+
+  /* Login box */
+  #loginBox {
+    max-width:520px;
+    margin:40px auto;
+    background:#fff;
+    padding:18px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.08);
+    display:none;
+  }
+  #btnLogin {
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    background:#0b5ed7;
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+  }
+  #btnLogout {
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.6);
+    background:transparent;
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+    margin-left:10px;
+  }
 </style>
 </head>
 
 <body>
 
-<!-- 🔒 SENHA DO ADMIN (PROTEÇÃO BÁSICA) -->
-<script>
-  (function () {
-    const senhaCerta = "CASA2026"; // <-- TROQUE AQUI PARA A SUA SENHA
-    const senha = prompt("Digite a senha do Painel Admin:");
-    if (senha !== senhaCerta) {
-      alert("Senha incorreta.");
-      window.location.href = "index.html";
-    }
-  })();
-</script>
+<!-- 🔒 LOGIN -->
+<div id="loginBox">
+  <h2 style="margin:0 0 10px;">Acesso do Administrador</h2>
+  <p style="margin:0 0 14px;color:#555;">Entre com Google para acessar o painel.</p>
+  <button id="btnLogin">Entrar com Google</button>
+  <p id="loginMsg" style="margin-top:10px;color:#b00020;font-weight:800;"></p>
+</div>
 
-<header>
-  <h1>Painel Administrativo</h1>
-  <div class="muted">Casa da Impressora • Agendamentos (Firestore)</div>
+<header style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+    <div>
+      <h1 style="margin:0;">Painel Administrativo</h1>
+      <div class="muted" style="color:rgba(255,255,255,.9);">Casa da Impressora • Agendamentos (Firestore)</div>
+    </div>
+    <button id="btnLogout" title="Sair">Sair</button>
+  </div>
 </header>
 
-<main>
+<main style="display:none;">
   <div class="card">
     <h2>Filtros</h2>
     <div class="controls">
@@ -88,6 +120,8 @@
       <div class="muted" id="info">Carregando...</div>
       <div class="muted" id="statusMsg"></div>
     </div>
+
+    <div class="muted small" id="userInfo" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
@@ -117,10 +151,25 @@
 </main>
 
 <script type="module">
-import { db } from "./firebase.js";
+import { app, db } from "./firebase.js";
+
 import {
-  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const ADMIN_EMAIL = "casadaimpressora2025@gmail.com";
+
+const loginBox = document.getElementById("loginBox");
+const btnLogin = document.getElementById("btnLogin");
+const loginMsg = document.getElementById("loginMsg");
+const header = document.querySelector("header");
+const main = document.querySelector("main");
+const btnLogout = document.getElementById("btnLogout");
+const userInfo = document.getElementById("userInfo");
 
 const tbody = document.getElementById("tbody");
 const info = document.getElementById("info");
@@ -141,6 +190,9 @@ const STATUS_OPCOES = [
   "Reprovado",
   "Concluído"
 ];
+
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 function setMsg(texto, tipo="") {
   statusMsg.className = tipo === "ok" ? "ok" : tipo === "err" ? "err" : "muted";
@@ -308,16 +360,42 @@ function imprimirOS(dados, id) {
   w.focus();
 }
 
+async function checarAdmin(email) {
+  // trava adicional (hardcoded)
+  if (email !== ADMIN_EMAIL) return false;
+
+  // valida no Firestore: existe admins/<email>
+  const ref = doc(db, "admins", email);
+  const snap = await getDoc(ref);
+  return snap.exists();
+}
+
+btnLogin.addEventListener("click", async () => {
+  loginMsg.textContent = "";
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error(e);
+    loginMsg.textContent = "Falha ao logar. Tente novamente.";
+  }
+});
+
+btnLogout.addEventListener("click", async () => {
+  try {
+    await signOut(auth);
+  } catch (e) {
+    console.error(e);
+  }
+});
+
 async function carregar() {
   setMsg("");
   limparTabela("Carregando...");
   info.textContent = "Carregando do Firestore...";
 
   try {
-    // Query base: mais novos primeiro
     let q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
 
-    // filtros do Firestore (apenas data e status — busca é no front)
     if (filtroData.value) {
       q = query(collection(db, "agendamentos"),
         where("data", "==", filtroData.value),
@@ -426,7 +504,6 @@ tbody.addEventListener("click", async (e) => {
     try {
       const json = tr.getAttribute("data-json") || "{}";
       const dados = JSON.parse(json);
-      // status pode ter sido trocado no select mas ainda não salvo
       dados.status = select?.value || dados.status || "Recebido";
       imprimirOS(dados, id);
     } catch (err) {
@@ -481,8 +558,31 @@ busca.addEventListener("input", () => {
 filtroData.addEventListener("change", carregar);
 statusFiltro.addEventListener("change", carregar);
 
-// Carrega ao abrir
-carregar();
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    loginBox.style.display = "block";
+    header.style.display = "none";
+    main.style.display = "none";
+    loginMsg.textContent = "";
+    return;
+  }
+
+  const ok = await checarAdmin(user.email);
+
+  if (!ok) {
+    loginBox.style.display = "block";
+    header.style.display = "none";
+    main.style.display = "none";
+    loginMsg.textContent = "Seu e-mail não tem permissão de admin.";
+    return;
+  }
+
+  loginBox.style.display = "none";
+  header.style.display = "";
+  main.style.display = "";
+  userInfo.textContent = `Logado como: ${user.email}`;
+  carregar();
+});
 </script>
 
 </body>
