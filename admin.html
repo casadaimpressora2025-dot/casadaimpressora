@@ -14,9 +14,7 @@
   .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
   .controls .field { display:flex; flex-direction:column; gap:6px; }
   label { font-weight:700; font-size: 13px; color:#123; }
-  input, select, button {
-    padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px;
-  }
+  input, select, button { padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; }
   button { cursor:pointer; border:none; }
   .btn { background:#0b5ed7; color:#fff; font-weight:800; }
   .btn:hover { filter:brightness(.95); }
@@ -24,7 +22,7 @@
   .btn-danger { background:#e53935; color:#fff; font-weight:800; }
   .muted { color:#666; font-size:13px; }
   .table-wrap { overflow:auto; border-radius:10px; border:1px solid #e6e6e6; }
-  table { width:100%; border-collapse:collapse; min-width: 900px; background:#fff; }
+  table { width:100%; border-collapse:collapse; min-width: 980px; background:#fff; }
   th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
   th { background:#f7f9fc; position:sticky; top:0; z-index:1; }
   .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f1f1f1; font-weight:800; font-size:12px; }
@@ -36,6 +34,19 @@
 </head>
 
 <body>
+
+<!-- 🔒 SENHA DO ADMIN (PROTEÇÃO BÁSICA) -->
+<script>
+  (function () {
+    const senhaCerta = "CASA2026"; // <-- TROQUE AQUI PARA A SUA SENHA
+    const senha = prompt("Digite a senha do Painel Admin:");
+    if (senha !== senhaCerta) {
+      alert("Senha incorreta.");
+      window.location.href = "index.html";
+    }
+  })();
+</script>
+
 <header>
   <h1>Painel Administrativo</h1>
   <div class="muted">Casa da Impressora • Agendamentos (Firestore)</div>
@@ -152,6 +163,151 @@ function limparTabela(mensagem="Carregando...") {
   tbody.innerHTML = `<tr><td colspan="7" class="muted">${mensagem}</td></tr>`;
 }
 
+function escapeHtml(str) {
+  return (str ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function imprimirOS(dados, id) {
+  const logoUrl = new URL("./logo.png", window.location.href).toString();
+
+  const cliente = escapeHtml(dados.nome || "");
+  const telefone = escapeHtml(dados.telefone || "");
+  const dataEntrega = escapeHtml(dados.data || "");
+  const modelo = escapeHtml(dados.modelo || "");
+  const tipo = escapeHtml(dados.tipo || "");
+  const problema = escapeHtml(dados.problema || "Não informado");
+  const status = escapeHtml(dados.status || "Recebido");
+  const osId = escapeHtml(id);
+
+  const html = `
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OS - ${osId}</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { font-family: Arial, sans-serif; color:#111; }
+  .wrap { border: 2px solid #111; padding: 10mm; border-radius: 8px; }
+  .top { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+  .brand { display:flex; gap:12px; align-items:center; }
+  .brand img { width: 110px; height:auto; }
+  .title { text-align:right; }
+  .title h1 { margin:0; font-size: 20px; }
+  .title .small { font-size: 12px; color:#333; margin-top:4px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; }
+  .box { border:1px solid #111; border-radius:8px; padding:10px; }
+  .box h3 { margin:0 0 8px 0; font-size: 14px; }
+  .line { margin: 6px 0; font-size: 13px; }
+  .label { font-weight: 700; }
+  .big { min-height: 90px; }
+  .big2 { min-height: 110px; }
+  .terms { font-size: 11px; color:#222; line-height:1.35; }
+  .sign { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; }
+  .sign .sigline { margin-top:28px; border-top:1px solid #111; padding-top:6px; font-size: 12px; }
+  .footer { margin-top:10px; font-size: 11px; color:#333; display:flex; justify-content:space-between; }
+  .pill { display:inline-block; padding:4px 10px; border:1px solid #111; border-radius:999px; font-weight:700; font-size:12px; }
+  .note { font-size: 12px; margin-top:10px; }
+  .no-print { margin-top:12px; display:flex; gap:10px; }
+  button { padding:10px 14px; border-radius:8px; border:1px solid #111; background:#fff; font-weight:800; cursor:pointer; }
+  .primary { background:#0b5ed7; color:#fff; border-color:#0b5ed7; }
+  @media print { .no-print { display:none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <img src="${logoUrl}" alt="Casa da Impressora"/>
+        <div>
+          <div style="font-weight:900; font-size:16px;">Casa da Impressora</div>
+          <div style="font-size:12px; color:#333;">Assistência Técnica em Impressão</div>
+          <div style="font-size:12px; color:#333;">WhatsApp: (88) 99368-7542</div>
+        </div>
+      </div>
+      <div class="title">
+        <h1>ORDEM DE SERVIÇO</h1>
+        <div class="small">Nº OS: <span class="pill">${osId}</span></div>
+        <div class="small">Status: <span class="pill">${status}</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box">
+        <h3>Dados do Cliente</h3>
+        <div class="line"><span class="label">Cliente:</span> ${cliente}</div>
+        <div class="line"><span class="label">Telefone:</span> ${telefone}</div>
+        <div class="line"><span class="label">Data de entrega:</span> ${dataEntrega}</div>
+      </div>
+
+      <div class="box">
+        <h3>Equipamento</h3>
+        <div class="line"><span class="label">Modelo:</span> ${modelo}</div>
+        <div class="line"><span class="label">Tipo:</span> ${tipo}</div>
+        <div class="line"><span class="label">Acessórios:</span> __________________________</div>
+        <div class="line"><span class="label">Senha/Pin:</span> __________________________</div>
+      </div>
+
+      <div class="box big">
+        <h3>Problema informado</h3>
+        <div class="line">${problema}</div>
+      </div>
+
+      <div class="box big2">
+        <h3>Observações técnicas (preencher na loja)</h3>
+        <div class="line">______________________________________________________________</div>
+        <div class="line">______________________________________________________________</div>
+        <div class="line">______________________________________________________________</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Prazo para avaliação e orçamento:</strong> até ______ dia(s) útil(eis) após a entrega.
+    </div>
+
+    <div class="box" style="margin-top:12px;">
+      <h3>Condições</h3>
+      <div class="terms">
+        1) O orçamento será realizado após avaliação técnica. <br/>
+        2) Peças e serviços somente mediante aprovação do cliente. <br/>
+        3) Equipamentos não retirados em até 30 dias após conclusão podem gerar taxa de armazenamento. <br/>
+        4) Caso o serviço não seja aprovado, poderá ser cobrada taxa de diagnóstico (se aplicável).
+      </div>
+    </div>
+
+    <div class="sign">
+      <div class="sigline">Assinatura do Cliente</div>
+      <div class="sigline">Assinatura / Responsável Técnico</div>
+    </div>
+
+    <div class="footer">
+      <div>Data: ____/____/______</div>
+      <div>Impresso pelo Painel Admin</div>
+    </div>
+
+    <div class="no-print">
+      <button class="primary" onclick="window.print()">Imprimir</button>
+      <button onclick="window.close()">Fechar</button>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const w = window.open("", "_blank", "width=900,height=700");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
+
 async function carregar() {
   setMsg("");
   limparTabela("Carregando...");
@@ -170,7 +326,6 @@ async function carregar() {
     }
 
     if (statusFiltro.value) {
-      // se já tem data, mantém; se não tem, cria query com status
       if (filtroData.value) {
         q = query(collection(db, "agendamentos"),
           where("data", "==", filtroData.value),
@@ -194,11 +349,9 @@ async function carregar() {
       const dados = d.data();
       const id = d.id;
 
-      // busca no front
       const haystack = normalizar(
         `${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
       );
-
       if (termo && !haystack.includes(termo)) return;
 
       const tel = (dados.telefone || "").replace(/\D/g, "");
@@ -208,26 +361,36 @@ async function carregar() {
       );
 
       rows.push(`
-        <tr data-id="${id}">
+        <tr data-id="${id}"
+            data-json="${escapeHtml(JSON.stringify({
+              nome: dados.nome || "",
+              telefone: dados.telefone || "",
+              data: dados.data || "",
+              modelo: dados.modelo || "",
+              tipo: dados.tipo || "",
+              problema: dados.problema || "",
+              status: dados.status || "Recebido"
+            }))}">
           <td>
             <span class="pill">${dados.data || "-"}</span><br>
             <span class="muted small">ID: ${id.slice(0,6)}...</span>
           </td>
-          <td><strong>${dados.nome || "-"}</strong></td>
+          <td><strong>${escapeHtml(dados.nome || "-")}</strong></td>
           <td>
-            <div>${dados.telefone || "-"}</div>
+            <div>${escapeHtml(dados.telefone || "-")}</div>
             ${telWpp ? `<a class="small" href="https://wa.me/${telWpp}?text=${msgWpp}" target="_blank">Abrir WhatsApp</a>` : ""}
           </td>
           <td>
-            <div><strong>${dados.modelo || "-"}</strong></div>
-            <div class="muted small">${dados.tipo || "-"}</div>
+            <div><strong>${escapeHtml(dados.modelo || "-")}</strong></div>
+            <div class="muted small">${escapeHtml(dados.tipo || "-")}</div>
           </td>
-          <td class="small">${(dados.problema || "—").replace(/</g,"&lt;")}</td>
+          <td class="small">${escapeHtml(dados.problema || "—")}</td>
           <td>
             ${montarSelectStatus(dados.status || "Recebido")}
           </td>
           <td>
             <div class="row-actions">
+              <button class="btn-ghost imprimirBtn">Imprimir OS</button>
               <button class="btn salvarBtn">Salvar</button>
               <button class="btn-danger excluirBtn">Excluir</button>
             </div>
@@ -244,7 +407,6 @@ async function carregar() {
 
     tbody.innerHTML = rows.join("");
     info.textContent = `${rows.length} agendamento(s) exibido(s).`;
-
   } catch (err) {
     console.error(err);
     limparTabela("Erro ao carregar. Veja o Console (F12).");
@@ -260,13 +422,26 @@ tbody.addEventListener("click", async (e) => {
   const id = tr.getAttribute("data-id");
   const select = tr.querySelector(".statusSelect");
 
+  if (e.target.classList.contains("imprimirBtn")) {
+    try {
+      const json = tr.getAttribute("data-json") || "{}";
+      const dados = JSON.parse(json);
+      // status pode ter sido trocado no select mas ainda não salvo
+      dados.status = select?.value || dados.status || "Recebido";
+      imprimirOS(dados, id);
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao gerar OS (veja Console F12)", "err");
+    }
+    return;
+  }
+
   if (e.target.classList.contains("salvarBtn")) {
     const novoStatus = select.value;
 
     try {
       await updateDoc(doc(db, "agendamentos", id), { status: novoStatus });
       setMsg("Status atualizado com sucesso ✅", "ok");
-      // recarrega para manter ordem/resultado
       await carregar();
     } catch (err) {
       console.error(err);
@@ -299,7 +474,6 @@ btnLimpar.addEventListener("click", () => {
 });
 
 busca.addEventListener("input", () => {
-  // debounce simples
   clearTimeout(window.__t);
   window.__t = setTimeout(() => carregar(), 250);
 });
