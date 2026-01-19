@@ -52,6 +52,7 @@
     color:#fff;
     font-weight:900;
     cursor:pointer;
+    margin-left:10px;
   }
 </style>
 </head>
@@ -65,12 +66,12 @@
 
   <div class="row">
     <label for="user">Usuário</label>
-    <input id="user" value="admin" />
+    <input id="user" value="casa" autocomplete="username" />
   </div>
 
   <div class="row">
     <label for="pass">Senha</label>
-    <input id="pass" type="password" placeholder="Sua senha" />
+    <input id="pass" type="password" placeholder="Sua senha" autocomplete="current-password" />
   </div>
 
   <button id="loginBtn">Entrar</button>
@@ -101,8 +102,8 @@
       </div>
 
       <div class="field" style="min-width:260px; flex:1;">
-        <label for="busca">Buscar (nome/telefone/modelo)</label>
-        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150" />
+        <label for="busca">Buscar (nome/telefone/modelo/OS)</label>
+        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007" />
       </div>
 
       <div class="field">
@@ -135,7 +136,7 @@
       <table>
         <thead>
           <tr>
-            <th>Data</th>
+            <th>OS / Data</th>
             <th>Cliente</th>
             <th>Contato</th>
             <th>Equipamento</th>
@@ -162,18 +163,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ======================
-   LOGIN/SENHA (SEM GOOGLE)
+   LOGIN/SENHA
    ====================== */
 
-// Usuário fixo
-const USER_OK = "admin";
+// credenciais
+const USER_OK = "casa";
 
-// HASH SHA-256 da senha "Casa@2026"
-// Para trocar a senha: no final do arquivo tem um passo-a-passo rápido.
-const PASS_HASH_OK = "6a8d5d4f8f7f48a7b38b3f8a2e6d7d9d5e60a5cb1c9d8dfb5f3e8a9f9d9d6b5a";
+// HASH SHA-256 da senha "imp153624"
+const PASS_HASH_OK = "f3dc22619a2e17bdc8ce3ca5419002320d2b596eb1829d341a321c596e9fca5d";
 
 // sessão 12h
-const SESSION_KEY = "admin_session_v1";
+const SESSION_KEY = "admin_session_v2";
 const SESSION_HOURS = 12;
 
 const loginBox = document.getElementById("loginBox");
@@ -301,9 +301,13 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
-function imprimirOS(dados, id) {
+/* ===========
+   IMPRESSÃO 2 VIAS
+   =========== */
+function imprimirOS2Vias(dados, id) {
   const logoUrl = new URL("./logo.png", window.location.href).toString();
 
+  const osCurta = escapeHtml(dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`);
   const cliente = escapeHtml(dados.nome || "");
   const telefone = escapeHtml(dados.telefone || "");
   const dataEntrega = escapeHtml(dados.data || "");
@@ -311,7 +315,82 @@ function imprimirOS(dados, id) {
   const tipo = escapeHtml(dados.tipo || "");
   const problema = escapeHtml(dados.problema || "Não informado");
   const status = escapeHtml(dados.status || "Recebido");
-  const osId = escapeHtml(id);
+
+  const osHtml = (tituloVia) => `
+    <div class="via">
+      <div class="via-title">${tituloVia}</div>
+
+      <div class="top">
+        <div class="brand">
+          <img src="${logoUrl}" alt="Casa da Impressora"/>
+          <div>
+            <div style="font-weight:900; font-size:16px;">Casa da Impressora</div>
+            <div style="font-size:12px; color:#333;">Assistência Técnica em Impressão</div>
+            <div style="font-size:12px; color:#333;">WhatsApp: (88) 99368-7542</div>
+          </div>
+        </div>
+
+        <div class="title">
+          <h1>ORDEM DE SERVIÇO</h1>
+          <div class="small">Nº OS: <span class="pill">${osCurta}</span></div>
+          <div class="small">Status: <span class="pill">${status}</span></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="box">
+          <h3>Dados do Cliente</h3>
+          <div class="line"><span class="label">Cliente:</span> ${cliente}</div>
+          <div class="line"><span class="label">Telefone:</span> ${telefone}</div>
+          <div class="line"><span class="label">Data de entrega:</span> ${dataEntrega}</div>
+        </div>
+
+        <div class="box">
+          <h3>Equipamento</h3>
+          <div class="line"><span class="label">Modelo:</span> ${modelo}</div>
+          <div class="line"><span class="label">Tipo:</span> ${tipo}</div>
+          <div class="line"><span class="label">Acessórios:</span> __________________________</div>
+          <div class="line"><span class="label">Senha/Pin:</span> __________________________</div>
+        </div>
+
+        <div class="box big">
+          <h3>Problema informado</h3>
+          <div class="line">${problema}</div>
+        </div>
+
+        <div class="box big2">
+          <h3>Observações técnicas (preencher na loja)</h3>
+          <div class="line">______________________________________________________________</div>
+          <div class="line">______________________________________________________________</div>
+          <div class="line">______________________________________________________________</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Prazo para avaliação e orçamento:</strong> até ______ dia(s) útil(eis) após a entrega.
+      </div>
+
+      <div class="box" style="margin-top:10px;">
+        <h3>Condições</h3>
+        <div class="terms">
+          1) O orçamento será realizado após avaliação técnica. <br/>
+          2) Peças e serviços somente mediante aprovação do cliente. <br/>
+          3) Equipamentos não retirados em até 30 dias após conclusão podem gerar taxa de armazenamento. <br/>
+          4) Caso o serviço não seja aprovado, poderá ser cobrada taxa de diagnóstico (se aplicável).
+        </div>
+      </div>
+
+      <div class="sign">
+        <div class="sigline">Assinatura do Cliente</div>
+        <div class="sigline">Assinatura / Responsável Técnico</div>
+      </div>
+
+      <div class="footer">
+        <div>Data: ____/____/______</div>
+        <div>OS: ${osCurta}</div>
+      </div>
+    </div>
+  `.trim();
 
   const html = `
 <!doctype html>
@@ -319,31 +398,33 @@ function imprimirOS(dados, id) {
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>OS - ${osId}</title>
+<title>OS ${osCurta} (2 vias)</title>
 <style>
-  @page { size: A4; margin: 12mm; }
+  @page { size: A4; margin: 10mm; }
   body { font-family: Arial, sans-serif; color:#111; }
-  .wrap { border: 2px solid #111; padding: 10mm; border-radius: 8px; }
+  .wrap { border: 2px solid #111; padding: 8mm; border-radius: 8px; }
+  .via-title { font-weight:900; font-size:14px; margin-bottom:8px; }
   .top { display:flex; gap:12px; align-items:center; justify-content:space-between; }
   .brand { display:flex; gap:12px; align-items:center; }
-  .brand img { width: 110px; height:auto; }
+  .brand img { width: 95px; height:auto; }
   .title { text-align:right; }
-  .title h1 { margin:0; font-size: 20px; }
+  .title h1 { margin:0; font-size: 18px; }
   .title .small { font-size: 12px; color:#333; margin-top:4px; }
-  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; }
-  .box { border:1px solid #111; border-radius:8px; padding:10px; }
-  .box h3 { margin:0 0 8px 0; font-size: 14px; }
-  .line { margin: 6px 0; font-size: 13px; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+  .box { border:1px solid #111; border-radius:8px; padding:8px; }
+  .box h3 { margin:0 0 6px 0; font-size: 13px; }
+  .line { margin: 5px 0; font-size: 12.5px; }
   .label { font-weight: 700; }
-  .big { min-height: 90px; }
-  .big2 { min-height: 110px; }
-  .terms { font-size: 11px; color:#222; line-height:1.35; }
-  .sign { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; }
-  .sign .sigline { margin-top:28px; border-top:1px solid #111; padding-top:6px; font-size: 12px; }
-  .footer { margin-top:10px; font-size: 11px; color:#333; display:flex; justify-content:space-between; }
-  .pill { display:inline-block; padding:4px 10px; border:1px solid #111; border-radius:999px; font-weight:700; font-size:12px; }
-  .note { font-size: 12px; margin-top:10px; }
-  .no-print { margin-top:12px; display:flex; gap:10px; }
+  .big { min-height: 70px; }
+  .big2 { min-height: 85px; }
+  .terms { font-size: 10.8px; color:#222; line-height:1.32; }
+  .sign { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px; }
+  .sign .sigline { margin-top:18px; border-top:1px solid #111; padding-top:6px; font-size: 11px; }
+  .footer { margin-top:8px; font-size: 11px; color:#333; display:flex; justify-content:space-between; }
+  .pill { display:inline-block; padding:3px 10px; border:1px solid #111; border-radius:999px; font-weight:700; font-size:11.5px; }
+  .note { font-size: 11.5px; margin-top:8px; }
+  .corte { border:0; border-top:2px dashed #111; margin:12px 0; }
+  .no-print { margin-top:10px; display:flex; gap:10px; }
   button { padding:10px 14px; border-radius:8px; border:1px solid #111; background:#fff; font-weight:800; cursor:pointer; }
   .primary { background:#0b5ed7; color:#fff; border-color:#0b5ed7; }
   @media print { .no-print { display:none; } }
@@ -351,74 +432,9 @@ function imprimirOS(dados, id) {
 </head>
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <img src="${logoUrl}" alt="Casa da Impressora"/>
-        <div>
-          <div style="font-weight:900; font-size:16px;">Casa da Impressora</div>
-          <div style="font-size:12px; color:#333;">Assistência Técnica em Impressão</div>
-          <div style="font-size:12px; color:#333;">WhatsApp: (88) 99368-7542</div>
-        </div>
-      </div>
-      <div class="title">
-        <h1>ORDEM DE SERVIÇO</h1>
-        <div class="small">Nº OS: <span class="pill">${osId}</span></div>
-        <div class="small">Status: <span class="pill">${status}</span></div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="box">
-        <h3>Dados do Cliente</h3>
-        <div class="line"><span class="label">Cliente:</span> ${cliente}</div>
-        <div class="line"><span class="label">Telefone:</span> ${telefone}</div>
-        <div class="line"><span class="label">Data de entrega:</span> ${dataEntrega}</div>
-      </div>
-
-      <div class="box">
-        <h3>Equipamento</h3>
-        <div class="line"><span class="label">Modelo:</span> ${modelo}</div>
-        <div class="line"><span class="label">Tipo:</span> ${tipo}</div>
-        <div class="line"><span class="label">Acessórios:</span> __________________________</div>
-        <div class="line"><span class="label">Senha/Pin:</span> __________________________</div>
-      </div>
-
-      <div class="box big">
-        <h3>Problema informado</h3>
-        <div class="line">${problema}</div>
-      </div>
-
-      <div class="box big2">
-        <h3>Observações técnicas (preencher na loja)</h3>
-        <div class="line">______________________________________________________________</div>
-        <div class="line">______________________________________________________________</div>
-        <div class="line">______________________________________________________________</div>
-      </div>
-    </div>
-
-    <div class="note">
-      <strong>Prazo para avaliação e orçamento:</strong> até ______ dia(s) útil(eis) após a entrega.
-    </div>
-
-    <div class="box" style="margin-top:12px;">
-      <h3>Condições</h3>
-      <div class="terms">
-        1) O orçamento será realizado após avaliação técnica. <br/>
-        2) Peças e serviços somente mediante aprovação do cliente. <br/>
-        3) Equipamentos não retirados em até 30 dias após conclusão podem gerar taxa de armazenamento. <br/>
-        4) Caso o serviço não seja aprovado, poderá ser cobrada taxa de diagnóstico (se aplicável).
-      </div>
-    </div>
-
-    <div class="sign">
-      <div class="sigline">Assinatura do Cliente</div>
-      <div class="sigline">Assinatura / Responsável Técnico</div>
-    </div>
-
-    <div class="footer">
-      <div>Data: ____/____/______</div>
-      <div>Impresso pelo Painel Admin</div>
-    </div>
+    ${osHtml("VIA DA LOJA")}
+    <hr class="corte"/>
+    ${osHtml("VIA DO CLIENTE")}
 
     <div class="no-print">
       <button class="primary" onclick="window.print()">Imprimir</button>
@@ -445,7 +461,8 @@ async function carregar() {
     let q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
 
     if (filtroData.value) {
-      q = query(collection(db, "agendamentos"),
+      q = query(
+        collection(db, "agendamentos"),
         where("data", "==", filtroData.value),
         orderBy("criadoEm", "desc")
       );
@@ -453,13 +470,15 @@ async function carregar() {
 
     if (statusFiltro.value) {
       if (filtroData.value) {
-        q = query(collection(db, "agendamentos"),
+        q = query(
+          collection(db, "agendamentos"),
           where("data", "==", filtroData.value),
           where("status", "==", statusFiltro.value),
           orderBy("criadoEm", "desc")
         );
       } else {
-        q = query(collection(db, "agendamentos"),
+        q = query(
+          collection(db, "agendamentos"),
           where("status", "==", statusFiltro.value),
           orderBy("criadoEm", "desc")
         );
@@ -475,20 +494,24 @@ async function carregar() {
       const dados = d.data();
       const id = d.id;
 
+      const osCodigo = dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`;
+
       const haystack = normalizar(
-        `${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
+        `${osCodigo} ${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
       );
       if (termo && !haystack.includes(termo)) return;
 
       const tel = (dados.telefone || "").replace(/\D/g, "");
       const telWpp = tel.startsWith("55") ? tel : (tel ? "55" + tel : "");
       const msgWpp = encodeURIComponent(
-        `Olá, ${dados.nome || ""}! Aqui é da Casa da Impressora.\n\nSeu status está: ${dados.status || ""}.\n\nSe precisar, responda por aqui.`
+        `Olá, ${dados.nome || ""}! Aqui é da Casa da Impressora.\n\nSua OS é ${osCodigo}.\nStatus: ${dados.status || ""}.\n\nSe precisar, responda por aqui.`
       );
 
       rows.push(`
         <tr data-id="${id}"
             data-json="${escapeHtml(JSON.stringify({
+              osCodigo: dados.osCodigo || "",
+              osNumero: dados.osNumero || null,
               nome: dados.nome || "",
               telefone: dados.telefone || "",
               data: dados.data || "",
@@ -498,8 +521,8 @@ async function carregar() {
               status: dados.status || "Recebido"
             }))}">
           <td>
-            <span class="pill">${dados.data || "-"}</span><br>
-            <span class="muted small">ID: ${id.slice(0,6)}...</span>
+            <div class="pill">${escapeHtml(osCodigo)}</div>
+            <div class="muted small" style="margin-top:6px;">📅 ${escapeHtml(dados.data || "-")}</div>
           </td>
           <td><strong>${escapeHtml(dados.nome || "-")}</strong></td>
           <td>
@@ -516,7 +539,7 @@ async function carregar() {
           </td>
           <td>
             <div class="row-actions">
-              <button class="btn-ghost imprimirBtn">Imprimir OS</button>
+              <button class="btn-ghost imprimirBtn">Imprimir 2 vias</button>
               <button class="btn salvarBtn">Salvar</button>
               <button class="btn-danger excluirBtn">Excluir</button>
             </div>
@@ -553,7 +576,7 @@ tbody.addEventListener("click", async (e) => {
       const json = tr.getAttribute("data-json") || "{}";
       const dados = JSON.parse(json);
       dados.status = select?.value || dados.status || "Recebido";
-      imprimirOS(dados, id);
+      imprimirOS2Vias(dados, id);
     } catch (err) {
       console.error(err);
       setMsg("Erro ao gerar OS (veja Console F12)", "err");
@@ -607,14 +630,13 @@ filtroData.addEventListener("change", carregar);
 statusFiltro.addEventListener("change", carregar);
 
 /* ======================
-   COMO TROCAR A SENHA
+   TROCAR A SENHA (se quiser)
    ======================
-   1) Abra o admin, pressione F12 → Console
-   2) Cole e rode:
-      crypto.subtle.digest('SHA-256', new TextEncoder().encode('SUA_NOVA_SENHA'))
+   1) Abra o admin, F12 → Console e rode:
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode('NOVA_SENHA'))
         .then(buf => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''))
         .then(hash => console.log(hash));
-   3) Pegue o hash e substitua em PASS_HASH_OK
+   2) Troque o PASS_HASH_OK pelo hash novo.
 */
 </script>
 
