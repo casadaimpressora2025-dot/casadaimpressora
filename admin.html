@@ -1,44 +1,314 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-<title>Painel Admin</title>
-</head>
-<body>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Admin | Casa da Impressora</title>
 
-<h2>Painel Administrativo</h2>
-<table border="1">
-<thead>
-<tr>
-<th>Cliente</th>
-<th>Data</th>
-<th>Impressora</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="lista"></tbody>
-</table>
+<style>
+  body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; }
+  header { background:#0b5ed7; color:#fff; padding:18px; text-align:center; }
+  main { max-width: 1100px; margin: 20px auto; padding: 0 14px; }
+  .card { background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.08); padding:16px; margin-bottom:14px; }
+  h2 { margin:0 0 10px; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  .controls .field { display:flex; flex-direction:column; gap:6px; }
+  label { font-weight:700; font-size: 13px; color:#123; }
+  input, select, button {
+    padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px;
+  }
+  button { cursor:pointer; border:none; }
+  .btn { background:#0b5ed7; color:#fff; font-weight:800; }
+  .btn:hover { filter:brightness(.95); }
+  .btn-ghost { background:#e9f2ff; color:#0b5ed7; font-weight:800; border:1px solid #bcd3ff; }
+  .btn-danger { background:#e53935; color:#fff; font-weight:800; }
+  .muted { color:#666; font-size:13px; }
+  .table-wrap { overflow:auto; border-radius:10px; border:1px solid #e6e6e6; }
+  table { width:100%; border-collapse:collapse; min-width: 900px; background:#fff; }
+  th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
+  th { background:#f7f9fc; position:sticky; top:0; z-index:1; }
+  .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f1f1f1; font-weight:800; font-size:12px; }
+  .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .small { font-size:12px; }
+  .ok { color:#1b7f2a; font-weight:800; }
+  .err { color:#b00020; font-weight:800; }
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Painel Administrativo</h1>
+  <div class="muted">Casa da Impressora • Agendamentos (Firestore)</div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Filtros</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="filtroData">Data (opcional)</label>
+        <input type="date" id="filtroData" />
+      </div>
+
+      <div class="field" style="min-width:260px; flex:1;">
+        <label for="busca">Buscar (nome/telefone/modelo)</label>
+        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150" />
+      </div>
+
+      <div class="field">
+        <label for="statusFiltro">Status</label>
+        <select id="statusFiltro">
+          <option value="">Todos</option>
+          <option>Recebido</option>
+          <option>Em avaliação</option>
+          <option>Orçamento enviado</option>
+          <option>Aguardando aprovação</option>
+          <option>Aprovado</option>
+          <option>Reprovado</option>
+          <option>Concluído</option>
+        </select>
+      </div>
+
+      <button class="btn" id="btnRecarregar">Recarregar</button>
+      <button class="btn-ghost" id="btnLimpar">Limpar filtros</button>
+    </div>
+
+    <div style="margin-top:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div class="muted" id="info">Carregando...</div>
+      <div class="muted" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Agendamentos</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Contato</th>
+            <th>Equipamento</th>
+            <th>Problema</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="7" class="muted">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted small" style="margin-top:10px;">
+      Dica: você pode mudar o status e clicar em <strong>Salvar</strong> na mesma linha.
+    </p>
+  </div>
+</main>
 
 <script type="module">
 import { db } from "./firebase.js";
 import {
-  collection, getDocs, updateDoc, doc
+  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const lista = document.getElementById("lista");
+const tbody = document.getElementById("tbody");
+const info = document.getElementById("info");
+const statusMsg = document.getElementById("statusMsg");
 
-const snapshot = await getDocs(collection(db, "agendamentos"));
+const filtroData = document.getElementById("filtroData");
+const busca = document.getElementById("busca");
+const statusFiltro = document.getElementById("statusFiltro");
+const btnRecarregar = document.getElementById("btnRecarregar");
+const btnLimpar = document.getElementById("btnLimpar");
 
-snapshot.forEach(d => {
-  const dados = d.data();
-  lista.innerHTML += `
-    <tr>
-      <td>${dados.nome}</td>
-      <td>${dados.data}</td>
-      <td>${dados.modelo}</td>
-      <td>${dados.status}</td>
-    </tr>
+const STATUS_OPCOES = [
+  "Recebido",
+  "Em avaliação",
+  "Orçamento enviado",
+  "Aguardando aprovação",
+  "Aprovado",
+  "Reprovado",
+  "Concluído"
+];
+
+function setMsg(texto, tipo="") {
+  statusMsg.className = tipo === "ok" ? "ok" : tipo === "err" ? "err" : "muted";
+  statusMsg.textContent = texto || "";
+}
+
+function normalizar(str) {
+  return (str || "").toString().toLowerCase();
+}
+
+function montarSelectStatus(valorAtual) {
+  return `
+    <select class="statusSelect">
+      ${STATUS_OPCOES.map(s => `<option ${s===valorAtual ? "selected":""}>${s}</option>`).join("")}
+    </select>
   `;
+}
+
+function limparTabela(mensagem="Carregando...") {
+  tbody.innerHTML = `<tr><td colspan="7" class="muted">${mensagem}</td></tr>`;
+}
+
+async function carregar() {
+  setMsg("");
+  limparTabela("Carregando...");
+  info.textContent = "Carregando do Firestore...";
+
+  try {
+    // Query base: mais novos primeiro
+    let q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
+
+    // filtros do Firestore (apenas data e status — busca é no front)
+    if (filtroData.value) {
+      q = query(collection(db, "agendamentos"),
+        where("data", "==", filtroData.value),
+        orderBy("criadoEm", "desc")
+      );
+    }
+
+    if (statusFiltro.value) {
+      // se já tem data, mantém; se não tem, cria query com status
+      if (filtroData.value) {
+        q = query(collection(db, "agendamentos"),
+          where("data", "==", filtroData.value),
+          where("status", "==", statusFiltro.value),
+          orderBy("criadoEm", "desc")
+        );
+      } else {
+        q = query(collection(db, "agendamentos"),
+          where("status", "==", statusFiltro.value),
+          orderBy("criadoEm", "desc")
+        );
+      }
+    }
+
+    const snap = await getDocs(q);
+
+    const termo = normalizar(busca.value);
+    const rows = [];
+
+    snap.forEach((d) => {
+      const dados = d.data();
+      const id = d.id;
+
+      // busca no front
+      const haystack = normalizar(
+        `${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
+      );
+
+      if (termo && !haystack.includes(termo)) return;
+
+      const tel = (dados.telefone || "").replace(/\D/g, "");
+      const telWpp = tel.startsWith("55") ? tel : (tel ? "55" + tel : "");
+      const msgWpp = encodeURIComponent(
+        `Olá, ${dados.nome || ""}! Aqui é da Casa da Impressora.\n\nSeu status está: ${dados.status || ""}.\n\nSe precisar, responda por aqui.`
+      );
+
+      rows.push(`
+        <tr data-id="${id}">
+          <td>
+            <span class="pill">${dados.data || "-"}</span><br>
+            <span class="muted small">ID: ${id.slice(0,6)}...</span>
+          </td>
+          <td><strong>${dados.nome || "-"}</strong></td>
+          <td>
+            <div>${dados.telefone || "-"}</div>
+            ${telWpp ? `<a class="small" href="https://wa.me/${telWpp}?text=${msgWpp}" target="_blank">Abrir WhatsApp</a>` : ""}
+          </td>
+          <td>
+            <div><strong>${dados.modelo || "-"}</strong></div>
+            <div class="muted small">${dados.tipo || "-"}</div>
+          </td>
+          <td class="small">${(dados.problema || "—").replace(/</g,"&lt;")}</td>
+          <td>
+            ${montarSelectStatus(dados.status || "Recebido")}
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn salvarBtn">Salvar</button>
+              <button class="btn-danger excluirBtn">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `);
+    });
+
+    if (!rows.length) {
+      limparTabela("Nenhum agendamento encontrado com esses filtros.");
+      info.textContent = "0 resultados.";
+      return;
+    }
+
+    tbody.innerHTML = rows.join("");
+    info.textContent = `${rows.length} agendamento(s) exibido(s).`;
+
+  } catch (err) {
+    console.error(err);
+    limparTabela("Erro ao carregar. Veja o Console (F12).");
+    info.textContent = "Erro ao carregar.";
+    setMsg("Erro ao ler Firestore. Confira regras/permissões.", "err");
+  }
+}
+
+tbody.addEventListener("click", async (e) => {
+  const tr = e.target.closest("tr[data-id]");
+  if (!tr) return;
+
+  const id = tr.getAttribute("data-id");
+  const select = tr.querySelector(".statusSelect");
+
+  if (e.target.classList.contains("salvarBtn")) {
+    const novoStatus = select.value;
+
+    try {
+      await updateDoc(doc(db, "agendamentos", id), { status: novoStatus });
+      setMsg("Status atualizado com sucesso ✅", "ok");
+      // recarrega para manter ordem/resultado
+      await carregar();
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao salvar status ❌ (veja Console F12)", "err");
+    }
+  }
+
+  if (e.target.classList.contains("excluirBtn")) {
+    const ok = confirm("Tem certeza que deseja excluir esse agendamento?");
+    if (!ok) return;
+
+    try {
+      await deleteDoc(doc(db, "agendamentos", id));
+      setMsg("Agendamento excluído ✅", "ok");
+      await carregar();
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao excluir ❌ (veja Console F12)", "err");
+    }
+  }
 });
+
+btnRecarregar.addEventListener("click", carregar);
+
+btnLimpar.addEventListener("click", () => {
+  filtroData.value = "";
+  busca.value = "";
+  statusFiltro.value = "";
+  carregar();
+});
+
+busca.addEventListener("input", () => {
+  // debounce simples
+  clearTimeout(window.__t);
+  window.__t = setTimeout(() => carregar(), 250);
+});
+
+filtroData.addEventListener("change", carregar);
+statusFiltro.addEventListener("change", carregar);
+
+// Carrega ao abrir
+carregar();
 </script>
 
 </body>
