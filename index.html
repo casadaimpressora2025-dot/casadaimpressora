@@ -59,6 +59,54 @@ header {
     border-radius: 10px;
 }
 
+/* CTA PRINCIPAL */
+.cta-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: -15px;
+    padding: 10px 15px 0;
+}
+
+.cta-btn {
+    display: block;
+    max-width: 520px;
+    width: 100%;
+    background: linear-gradient(135deg, #0b3c5d, #0b5ed7);
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    padding: 18px 20px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 20px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+    border: 2px solid rgba(255,255,255,0.35);
+    animation: pulse 1.6s infinite;
+}
+
+.cta-btn span {
+    display: block;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(11,94,215,0.5),
+                    0 12px 25px rgba(0,0,0,0.25);
+    }
+    70% {
+        box-shadow: 0 0 0 18px rgba(11,94,215,0),
+                    0 12px 25px rgba(0,0,0,0.25);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(11,94,215,0),
+                    0 12px 25px rgba(0,0,0,0.25);
+    }
+}
+
 /* CONTEÚDO */
 section {
     max-width: 900px;
@@ -101,6 +149,11 @@ p {
 .instagram { background: #C13584; }
 .email { background: var(--azul); }
 
+/* CTA SECUNDÁRIO */
+.cta-secondary {
+    background: var(--azul);
+}
+
 /* RODAPÉ */
 footer {
     background: var(--preto);
@@ -119,6 +172,10 @@ footer {
         width: 100%;
         height: 200px;
     }
+
+    .cta-btn {
+        font-size: 18px;
+    }
 }
 </style>
 </head>
@@ -130,10 +187,19 @@ footer {
         <div class="logo">
             <img src="logo.png" alt="Casa da Impressora">
         </div>
-
         <div class="banner"></div>
     </div>
 </header>
+
+<!-- CTA PRINCIPAL -->
+<div class="cta-wrap">
+    <a class="cta-btn"
+       href="agendamento.html"
+       onclick="gtag('event','click',{'event_category':'Agendamento','event_label':'Botao Banner'});">
+        🛠️ Agendar Avaliação Agora
+        <span>Rápido • Atendimento profissional • WhatsApp</span>
+    </a>
+</div>
 
 <section>
     <h2>🏢 Casa da Impressora – Soluções completas em impressão</h2>
@@ -172,6 +238,12 @@ footer {
            target="_blank"
            onclick="gtag('event','click',{'event_category':'Contato','event_label':'WhatsApp'});">
            WhatsApp
+        </a>
+
+        <a class="cta-secondary"
+           href="agendamento.html"
+           onclick="gtag('event','click',{'event_category':'Agendamento','event_label':'Botao Contato'});">
+           🗓️ Agendar Avaliação
         </a>
 
         <a class="instagram"

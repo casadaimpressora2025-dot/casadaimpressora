@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Agendamento | Casa da Impressora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+}
+header {
+    background: #0b5ed7;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+main {
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,.1);
+}
+h2 {
+    text-align: center;
+}
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+textarea {
+    resize: vertical;
+}
+.prazo {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e9f2ff;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+}
+button {
+    margin-top: 25px;
+    width: 100%;
+    padding: 14px;
+    background: #0b5ed7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+button:hover {
+    background: #084298;
+}
+footer {
+    text-align: center;
+    margin: 20px;
+    color: #666;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Casa da Impressora</h1>
+    <p>Agendamento de Avaliação Técnica</p>
+</header>
+
+<main>
+<h2>Agende a entrega do equipamento</h2>
+
+<form id="form">
+    <label>Nome</label>
+    <input type="text" id="nome" required>
+
+    <label>WhatsApp</label>
+    <input type="tel" id="telefone" required>
+
+    <label>Modelo da impressora</label>
+    <input type="text" id="modelo" required>
+
+    <label>Tipo</label>
+    <select id="tipo" required>
+        <option value="">Selecione</option>
+        <option>Jato de tinta</option>
+        <option>Laser</option>
+        <option>Térmica</option>
+        <option>Matricial</option>
+    </select>
+
+    <label>Problema (opcional)</label>
+    <textarea id="problema" rows="3"></textarea>
+
+    <label>Data para entrega</label>
+    <input type="date" id="data" required>
+
+    <div class="prazo" id="prazo">
+        Selecione uma data
+    </div>
+
+    <button type="submit">Confirmar Agendamento</button>
+</form>
+</main>
+
+<footer>
+© 2026 Casa da Impressora
+</footer>
+
+<script>
+// ================= CONFIGURAÇÕES =================
+const capacidadeDiaria = 5;   // quantas impressoras por dia
+const tempoAvaliacao = 2;     // dias úteis para avaliação
+const whatsappEmpresa = "5588993687542"; // SEU WHATSAPP
+// ================================================
+
+// FILA SALVA NO NAVEGADOR
+let fila = JSON.parse(localStorage.getItem("fila")) || 0;
+
+const dataInput = document.getElementById("data");
+const prazoDiv = document.getElementById("prazo");
+
+dataInput.addEventListener("change", () => {
+    const diasFila = Math.ceil(fila / capacidadeDiaria);
+    const prazoTotal = diasFila + tempoAvaliacao;
+
+    prazoDiv.innerHTML = `
+        Prazo estimado para avaliação e orçamento:<br>
+        <strong>${prazoTotal} dias úteis</strong> após a entrega
+    `;
+});
+
+document.getElementById("form").addEventListener("submit", e => {
+    e.preventDefault();
+
+    fila++;
+    localStorage.setItem("fila", fila);
+
+    const nome = document.getElementById("nome").value;
+    const tel = document.getElementById("telefone").value;
+    const modelo = document.getElementById("modelo").value;
+    const tipo = document.getElementById("tipo").value;
+    const problema = document.getElementById("problema").value;
+    const data = dataInput.value;
+
+    const mensagem = `
+Olá! Me chamo ${nome}.
+
+📅 Data de entrega: ${data}
+🖨️ Impressora: ${modelo}
+📌 Tipo: ${tipo}
+❗ Problema: ${problema || "Não informado"}
+📞 Contato: ${tel}
+
+Aguardo confirmação. Obrigado!
+    `;
+
+    const url = `https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, "_blank");
+
+    alert("Agendamento registrado! Você será direcionado ao WhatsApp.");
+    document.getElementById("form").reset();
+    prazoDiv.innerText = "Selecione uma data";
+});
+</script>
+
+</body>
+</html>

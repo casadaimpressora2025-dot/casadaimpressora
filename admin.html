@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Painel Admin</title>
+</head>
+<body>
+
+<h2>Painel Administrativo</h2>
+<table border="1">
+<thead>
+<tr>
+<th>Cliente</th>
+<th>Data</th>
+<th>Impressora</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="lista"></tbody>
+</table>
+
+<script type="module">
+import { db } from "./firebase.js";
+import {
+  collection, getDocs, updateDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const lista = document.getElementById("lista");
+
+const snapshot = await getDocs(collection(db, "agendamentos"));
+
+snapshot.forEach(d => {
+  const dados = d.data();
+  lista.innerHTML += `
+    <tr>
+      <td>${dados.nome}</td>
+      <td>${dados.data}</td>
+      <td>${dados.modelo}</td>
+      <td>${dados.status}</td>
+    </tr>
+  `;
+});
+</script>
+
+</body>
+</html>
