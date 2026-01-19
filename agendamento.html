@@ -13,10 +13,33 @@ h2 { text-align:center; }
 label { display:block; margin-top:15px; font-weight:bold; }
 input, select, textarea { width:100%; padding:10px; margin-top:5px; border-radius:6px; border:1px solid #ccc; }
 textarea { resize:vertical; }
-.prazo { margin-top:20px; padding:15px; background:#e9f2ff; border-radius:6px; text-align:center; font-weight:bold; }
-button { margin-top:25px; width:100%; padding:14px; background:#0b5ed7; color:#fff; border:none; border-radius:6px; font-size:16px; cursor:pointer; }
+
+.prazo {
+  margin-top:20px;
+  padding:15px;
+  background:#e9f2ff;
+  border-radius:6px;
+  text-align:center;
+  font-weight:bold;
+  line-height: 1.35;
+}
+button {
+  margin-top:25px;
+  width:100%;
+  padding:14px;
+  background:#0b5ed7;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  font-size:16px;
+  cursor:pointer;
+  font-weight: 800;
+}
 button:hover { background:#084298; }
+button:disabled { opacity:.6; cursor:not-allowed; }
 footer { text-align:center; margin:20px; color:#666; }
+
+.small-muted { font-size:12px; color:#666; margin-top:6px; }
 </style>
 </head>
 
@@ -35,6 +58,7 @@ footer { text-align:center; margin:20px; color:#666; }
 
     <label>WhatsApp</label>
     <input type="tel" id="telefone" placeholder="Ex: 88993687542" required>
+    <div class="small-muted">Digite apenas números (DDD + número). Ex: 88993687542</div>
 
     <label>Modelo da impressora</label>
     <input type="text" id="modelo" required>
@@ -56,7 +80,7 @@ footer { text-align:center; margin:20px; color:#666; }
 
     <div class="prazo" id="prazo">Selecione uma data</div>
 
-    <button type="submit">Confirmar Agendamento</button>
+    <button type="submit" id="btnSubmit">Confirmar Agendamento</button>
   </form>
 </main>
 
@@ -65,113 +89,267 @@ footer { text-align:center; margin:20px; color:#666; }
 <script type="module">
 import { db } from "./firebase.js";
 import {
-  collection, addDoc, query, where, getDocs, serverTimestamp
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // CONFIG
-  const capacidadeDiaria = 5;          // lotação por dia
-  const tempoAvaliacao = 2;            // dias úteis (mensagem)
-  const whatsappEmpresa = "5588993687542";
+/* ======================
+   CONFIG
+   ====================== */
+const capacidadeDiaria = 5;          // lotação por dia
+const tempoAvaliacao = 2;            // dias úteis (mensagem)
+const whatsappEmpresa = "5588993687542";
 
-  const form = document.getElementById("form");
-  const dataInput = document.getElementById("data");
-  const prazoDiv = document.getElementById("prazo");
+/* ======================
+   ELEMENTOS
+   ====================== */
+const form = document.getElementById("form");
+const dataInput = document.getElementById("data");
+const prazoDiv = document.getElementById("prazo");
+const btnSubmit = document.getElementById("btnSubmit");
 
-  console.log("✅ Firebase carregou e DB está pronto:", db);
+console.log("✅ Firebase DB pronto:", db);
 
-  async function qtdAgendamentosNaData(data) {
-    const q = query(collection(db, "agendamentos"), where("data", "==", data));
-    const snap = await getDocs(q);
-    return snap.size;
+/* ======================
+   HELPERS
+   ====================== */
+function hojeISO() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function somenteNumeros(str) {
+  return (str || "").replace(/\D/g, "");
+}
+
+function validarTelefoneBR(num) {
+  // aceita 10 ou 11 dígitos sem 55, ou 12/13 com 55
+  // Ex: 88993687542 (11) ou 5588993687542 (13)
+  if (!num) return false;
+  if (num.length === 10 || num.length === 11) return true;
+  if (num.length === 12 || num.length === 13) return num.startsWith("55");
+  return false;
+}
+
+function formatarTelefoneExibicao(num) {
+  // não precisa perfeito, só ajuda
+  const n = somenteNumeros(num);
+  if (n.length === 11) return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`;
+  if (n.length === 10) return `(${n.slice(0,2)}) ${n.slice(2,6)}-${n.slice(6)}`;
+  if (n.startsWith("55") && (n.length === 12 || n.length === 13)) {
+    const ddd = n.slice(2,4);
+    const resto = n.slice(4);
+    return `+55 (${ddd}) ${resto}`;
+  }
+  return n;
+}
+
+/* ======================
+   LOTAÇÃO POR DIA
+   ====================== */
+async function qtdAgendamentosNaData(data) {
+  const q = query(collection(db, "agendamentos"), where("data", "==", data));
+  const snap = await getDocs(q);
+  return snap.size;
+}
+
+dataInput.min = hojeISO();
+
+dataInput.addEventListener("change", async () => {
+  const data = dataInput.value;
+  if (!data) return;
+
+  // evita data passada
+  if (data < hojeISO()) {
+    prazoDiv.innerHTML = "❌ Escolha uma data a partir de hoje.";
+    dataInput.value = "";
+    return;
   }
 
-  dataInput.addEventListener("change", async () => {
-    const data = dataInput.value;
-    if (!data) return;
+  prazoDiv.innerText = "Verificando disponibilidade...";
 
-    prazoDiv.innerText = "Verificando disponibilidade...";
+  try {
+    const total = await qtdAgendamentosNaData(data);
 
-    try {
-      const total = await qtdAgendamentosNaData(data);
-
-      if (total >= capacidadeDiaria) {
-        prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
-        dataInput.value = "";
-        return;
-      }
-
-      const restantes = capacidadeDiaria - total;
-      prazoDiv.innerHTML =
-        `✅ Data disponível (restam ${restantes} vaga(s)).<br>` +
-        `Prazo estimado: <strong>${tempoAvaliacao} dias úteis</strong> após a entrega.`;
-    } catch (err) {
-      console.error("❌ Erro ao consultar Firestore:", err);
-      prazoDiv.innerText = "❌ Erro ao verificar disponibilidade. Veja o Console (F12).";
+    if (total >= capacidadeDiaria) {
+      prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
+      dataInput.value = "";
+      return;
     }
+
+    const restantes = capacidadeDiaria - total;
+    prazoDiv.innerHTML =
+      `✅ Data disponível (restam ${restantes} vaga(s)).<br>` +
+      `Prazo estimado: <strong>${tempoAvaliacao} dias úteis</strong> após a entrega.`;
+  } catch (err) {
+    console.error("❌ Erro ao consultar Firestore:", err);
+    prazoDiv.innerText = "❌ Erro ao verificar disponibilidade. Veja o Console (F12).";
+  }
+});
+
+/* ======================
+   OS SEQUENCIAL (contador)
+   Coleção: config / Doc: counters / Campo: os
+   ====================== */
+async function garantirCounter() {
+  const ref = doc(db, "config", "counters");
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    // tenta criar o contador na primeira vez
+    await setDoc(ref, { os: 0 }, { merge: true });
+  }
+}
+
+async function gerarOSSequencial() {
+  const ref = doc(db, "config", "counters");
+
+  const result = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+
+    // se não existir, cria dentro da transação
+    if (!snap.exists()) {
+      tx.set(ref, { os: 1 }, { merge: true });
+      const numero = 1;
+      return {
+        numero,
+        codigo: `OS-${String(numero).padStart(4, "0")}`
+      };
+    }
+
+    const atual = Number(snap.data().os || 0);
+    const proximo = atual + 1;
+
+    tx.update(ref, { os: proximo });
+
+    return {
+      numero: proximo,
+      codigo: `OS-${String(proximo).padStart(4, "0")}`
+    };
   });
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  return result;
+}
 
-    // limpa espaços / caracteres
-    const telefoneLimpo = document.getElementById("telefone").value.replace(/\s+/g, "").trim();
+/* ======================
+   SUBMIT
+   ====================== */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = "Salvando...";
+
+  try {
+    const nome = document.getElementById("nome").value.trim();
+    const telefoneRaw = document.getElementById("telefone").value;
+    const telefoneLimpo = somenteNumeros(telefoneRaw);
+    const modelo = document.getElementById("modelo").value.trim();
+    const tipo = document.getElementById("tipo").value;
+    const problema = document.getElementById("problema").value.trim();
+    const data = document.getElementById("data").value;
+
+    if (!nome || !telefoneLimpo || !modelo || !tipo || !data) {
+      alert("Preencha os campos obrigatórios.");
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Confirmar Agendamento";
+      return;
+    }
+
+    if (!validarTelefoneBR(telefoneLimpo)) {
+      alert("WhatsApp inválido. Digite apenas números (DDD + número). Ex: 88993687542");
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Confirmar Agendamento";
+      return;
+    }
+
+    if (data < hojeISO()) {
+      alert("Escolha uma data a partir de hoje.");
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Confirmar Agendamento";
+      return;
+    }
+
+    // Confere lotação de novo (evita dois clientes pegarem a última vaga)
+    const total = await qtdAgendamentosNaData(data);
+    if (total >= capacidadeDiaria) {
+      alert("Essa data acabou de lotar. Escolha outro dia.");
+      prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
+      dataInput.value = "";
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Confirmar Agendamento";
+      return;
+    }
+
+    // garante contador e gera OS
+    await garantirCounter();
+    const os = await gerarOSSequencial();
 
     const dados = {
-      nome: document.getElementById("nome").value.trim(),
+      osNumero: os.numero,
+      osCodigo: os.codigo,
+
+      nome,
       telefone: telefoneLimpo,
-      modelo: document.getElementById("modelo").value.trim(),
-      tipo: document.getElementById("tipo").value,
-      problema: document.getElementById("problema").value.trim(),
-      data: document.getElementById("data").value,
+      modelo,
+      tipo,
+      problema,
+      data,
+
       status: "Recebido",
       criadoEm: serverTimestamp()
     };
 
-    if (!dados.data) {
-      alert("Escolha uma data para entrega.");
-      return;
-    }
+    await addDoc(collection(db, "agendamentos"), dados);
+    console.log("✅ Agendamento salvo no Firestore:", dados);
 
-    try {
-      // Confere lotação de novo (evita pegar última vaga junto)
-      const total = await qtdAgendamentosNaData(dados.data);
-      if (total >= capacidadeDiaria) {
-        alert("Essa data acabou de lotar. Escolha outro dia.");
-        prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
-        dataInput.value = "";
-        return;
-      }
-
-      await addDoc(collection(db, "agendamentos"), dados);
-      console.log("✅ Agendamento salvo no Firestore:", dados);
-
-      const mensagem = `
+    const mensagem = `
 Olá! Quero agendar avaliação.
 
+🧾 Ordem de Serviço: ${dados.osCodigo}
 📅 Data de entrega: ${dados.data}
 👤 Cliente: ${dados.nome}
-📞 WhatsApp: ${dados.telefone}
+📞 WhatsApp: ${formatarTelefoneExibicao(dados.telefone)}
 🖨️ Modelo: ${dados.modelo}
 📌 Tipo: ${dados.tipo}
 ❗ Problema: ${dados.problema || "Não informado"}
 
 Obrigado!
-      `.trim();
+    `.trim();
 
-      window.open(`https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(mensagem)}`, "_blank");
-      alert("Agendamento registrado! Abrindo WhatsApp...");
+    window.open(
+      `https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(mensagem)}`,
+      "_blank"
+    );
 
-      form.reset();
-      prazoDiv.innerText = "Selecione uma data";
-    } catch (err) {
-      console.error("❌ Erro ao salvar no Firestore:", err);
+    alert(`Agendamento registrado!\nSua OS é: ${dados.osCodigo}\nAbrindo WhatsApp...`);
+
+    form.reset();
+    prazoDiv.innerText = "Selecione uma data";
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = "Confirmar Agendamento";
+  } catch (err) {
+    console.error("❌ Erro ao salvar no Firestore:", err);
+
+    // dica pra você ver rápido
+    if ((err?.code || "").includes("permission")) {
+      alert("Permissão negada no Firestore (regras). Ajuste as regras e teste novamente.");
+    } else {
       alert("Deu erro ao salvar no sistema. Veja o Console (F12).");
-
-      // DICA ÚTIL
-      console.error("Se o erro for PERMISSION_DENIED, ajuste as Regras do Firestore para teste.");
     }
-  });
+
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = "Confirmar Agendamento";
+  }
 });
 </script>
 
