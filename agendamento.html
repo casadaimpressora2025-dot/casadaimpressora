@@ -34,7 +34,7 @@ footer { text-align:center; margin:20px; color:#666; }
     <input type="text" id="nome" required>
 
     <label>WhatsApp</label>
-    <input type="tel" id="telefone" required>
+    <input type="tel" id="telefone" placeholder="Ex: 88993687542" required>
 
     <label>Modelo da impressora</label>
     <input type="text" id="modelo" required>
@@ -68,79 +68,85 @@ import {
   collection, addDoc, query, where, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// CONFIG
-const capacidadeDiaria = 5;          // lotação por dia
-const tempoAvaliacao = 2;            // dias úteis (mensagem)
-const whatsappEmpresa = "5588993687542";
+document.addEventListener("DOMContentLoaded", () => {
+  // CONFIG
+  const capacidadeDiaria = 5;          // lotação por dia
+  const tempoAvaliacao = 2;            // dias úteis (mensagem)
+  const whatsappEmpresa = "5588993687542";
 
-const dataInput = document.getElementById("data");
-const prazoDiv = document.getElementById("prazo");
+  const form = document.getElementById("form");
+  const dataInput = document.getElementById("data");
+  const prazoDiv = document.getElementById("prazo");
 
-console.log("Firebase OK:", db);
+  console.log("✅ Firebase carregou e DB está pronto:", db);
 
-async function qtdAgendamentosNaData(data) {
-  const q = query(collection(db, "agendamentos"), where("data", "==", data));
-  const snap = await getDocs(q);
-  return snap.size;
-}
+  async function qtdAgendamentosNaData(data) {
+    const q = query(collection(db, "agendamentos"), where("data", "==", data));
+    const snap = await getDocs(q);
+    return snap.size;
+  }
 
-dataInput.addEventListener("change", async () => {
-  const data = dataInput.value;
-  if (!data) return;
+  dataInput.addEventListener("change", async () => {
+    const data = dataInput.value;
+    if (!data) return;
 
-  prazoDiv.innerText = "Verificando disponibilidade...";
+    prazoDiv.innerText = "Verificando disponibilidade...";
 
-  try {
-    const total = await qtdAgendamentosNaData(data);
+    try {
+      const total = await qtdAgendamentosNaData(data);
 
-    if (total >= capacidadeDiaria) {
-      prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
-      dataInput.value = "";
+      if (total >= capacidadeDiaria) {
+        prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
+        dataInput.value = "";
+        return;
+      }
+
+      const restantes = capacidadeDiaria - total;
+      prazoDiv.innerHTML =
+        `✅ Data disponível (restam ${restantes} vaga(s)).<br>` +
+        `Prazo estimado: <strong>${tempoAvaliacao} dias úteis</strong> após a entrega.`;
+    } catch (err) {
+      console.error("❌ Erro ao consultar Firestore:", err);
+      prazoDiv.innerText = "❌ Erro ao verificar disponibilidade. Veja o Console (F12).";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // limpa espaços / caracteres
+    const telefoneLimpo = document.getElementById("telefone").value.replace(/\s+/g, "").trim();
+
+    const dados = {
+      nome: document.getElementById("nome").value.trim(),
+      telefone: telefoneLimpo,
+      modelo: document.getElementById("modelo").value.trim(),
+      tipo: document.getElementById("tipo").value,
+      problema: document.getElementById("problema").value.trim(),
+      data: document.getElementById("data").value,
+      status: "Recebido",
+      criadoEm: serverTimestamp()
+    };
+
+    if (!dados.data) {
+      alert("Escolha uma data para entrega.");
       return;
     }
 
-    const restantes = capacidadeDiaria - total;
-    prazoDiv.innerHTML =
-      `✅ Data disponível (restam ${restantes} vaga(s)).<br>` +
-      `Prazo estimado: <strong>${tempoAvaliacao} dias úteis</strong> após a entrega.`;
-  } catch (err) {
-    console.error("Erro ao consultar Firestore:", err);
-    prazoDiv.innerText = "❌ Erro ao verificar disponibilidade. Veja o Console (F12).";
-  }
-});
+    try {
+      // Confere lotação de novo (evita pegar última vaga junto)
+      const total = await qtdAgendamentosNaData(dados.data);
+      if (total >= capacidadeDiaria) {
+        alert("Essa data acabou de lotar. Escolha outro dia.");
+        prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
+        dataInput.value = "";
+        return;
+      }
 
-document.getElementById("form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+      await addDoc(collection(db, "agendamentos"), dados);
+      console.log("✅ Agendamento salvo no Firestore:", dados);
 
-  const dados = {
-    nome: document.getElementById("nome").value.trim(),
-    telefone: document.getElementById("telefone").value.trim(),
-    modelo: document.getElementById("modelo").value.trim(),
-    tipo: document.getElementById("tipo").value,
-    problema: document.getElementById("problema").value.trim(),
-    data: document.getElementById("data").value,
-    status: "Recebido",
-    criadoEm: serverTimestamp()
-  };
-
-  if (!dados.data) {
-    alert("Escolha uma data para entrega.");
-    return;
-  }
-
-  try {
-    // Confere lotação de novo (pra evitar dois clientes pegarem a última vaga)
-    const total = await qtdAgendamentosNaData(dados.data);
-    if (total >= capacidadeDiaria) {
-      alert("Essa data acabou de lotar. Escolha outro dia.");
-      prazoDiv.innerHTML = "❌ Data lotada. Escolha outro dia.";
-      dataInput.value = "";
-      return;
-    }
-
-    await addDoc(collection(db, "agendamentos"), dados);
-
-    const mensagem = `
+      const mensagem = `
 Olá! Quero agendar avaliação.
 
 📅 Data de entrega: ${dados.data}
@@ -151,17 +157,21 @@ Olá! Quero agendar avaliação.
 ❗ Problema: ${dados.problema || "Não informado"}
 
 Obrigado!
-    `.trim();
+      `.trim();
 
-    window.open(`https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(mensagem)}`, "_blank");
-    alert("Agendamento registrado! Abrindo WhatsApp...");
+      window.open(`https://wa.me/${whatsappEmpresa}?text=${encodeURIComponent(mensagem)}`, "_blank");
+      alert("Agendamento registrado! Abrindo WhatsApp...");
 
-    document.getElementById("form").reset();
-    prazoDiv.innerText = "Selecione uma data";
-  } catch (err) {
-    console.error("Erro ao salvar no Firestore:", err);
-    alert("Deu erro ao salvar no sistema. Veja o Console (F12).");
-  }
+      form.reset();
+      prazoDiv.innerText = "Selecione uma data";
+    } catch (err) {
+      console.error("❌ Erro ao salvar no Firestore:", err);
+      alert("Deu erro ao salvar no sistema. Veja o Console (F12).");
+
+      // DICA ÚTIL
+      console.error("Se o erro for PERMISSION_DENIED, ajuste as Regras do Firestore para teste.");
+    }
+  });
 });
 </script>
 
