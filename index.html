@@ -59,7 +59,7 @@ header {
     border-radius: 10px;
 }
 
-/* CTA PRINCIPAL */
+/* CTAs (AGENDAMENTO + LOCAÇÃO) */
 .cta-wrap {
     display: flex;
     justify-content: center;
@@ -67,9 +67,16 @@ header {
     padding: 10px 15px 0;
 }
 
+.cta-stack{
+    width: 100%;
+    max-width: 520px;
+    display: grid;
+    gap: 12px;
+}
+
+/* CTA PRINCIPAL */
 .cta-btn {
     display: block;
-    max-width: 520px;
     width: 100%;
     background: linear-gradient(135deg, #0b3c5d, #0b5ed7);
     color: #fff;
@@ -105,6 +112,37 @@ header {
         box-shadow: 0 0 0 0 rgba(11,94,215,0),
                     0 12px 25px rgba(0,0,0,0.25);
     }
+}
+
+/* CTA LOCAÇÃO (secundário chamativo) */
+.cta-locacao{
+    display:block;
+    width:100%;
+    text-decoration:none;
+    text-align:center;
+    padding: 16px 18px;
+    border-radius: 14px;
+    font-weight: 900;
+    font-size: 18px;
+    color: #0b3c5d;
+    background: linear-gradient(135deg, #ffe39a, #e1c16e);
+    border: 2px solid rgba(11,60,93,0.15);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.cta-locacao span{
+    display:block;
+    margin-top:6px;
+    font-size:13px;
+    font-weight:700;
+    color:#0b3c5d;
+    opacity: .95;
+}
+
+.cta-locacao:hover{
+    filter: brightness(.98);
+    transform: translateY(-1px);
+    transition:.15s;
 }
 
 /* CONTEÚDO */
@@ -154,6 +192,13 @@ p {
     background: var(--azul);
 }
 
+/* NOVO BOTÃO LOCAÇÃO NO CONTATO */
+.locacao {
+    background: #e1c16e;
+    color: #0b3c5d !important;
+    font-weight: 900;
+}
+
 /* RODAPÉ */
 footer {
     background: var(--preto);
@@ -176,6 +221,10 @@ footer {
     .cta-btn {
         font-size: 18px;
     }
+
+    .cta-locacao{
+        font-size: 16px;
+    }
 }
 </style>
 </head>
@@ -191,14 +240,25 @@ footer {
     </div>
 </header>
 
-<!-- CTA PRINCIPAL -->
+<!-- CTAs ABAIXO DO BANNER -->
 <div class="cta-wrap">
-    <a class="cta-btn"
-       href="agendamento.html"
-       onclick="gtag('event','click',{'event_category':'Agendamento','event_label':'Botao Banner'});">
-        🛠️ Agendar Avaliação Agora
-        <span>Rápido • Atendimento profissional • WhatsApp</span>
-    </a>
+  <div class="cta-stack">
+      <!-- CTA PRINCIPAL: AGENDAMENTO -->
+      <a class="cta-btn"
+         href="agendamento.html"
+         onclick="gtag('event','click',{'event_category':'Agendamento','event_label':'Botao Banner'});">
+          🛠️ Agendar Avaliação Agora
+          <span>Rápido • Atendimento profissional • WhatsApp</span>
+      </a>
+
+      <!-- CTA LOCAÇÃO: NOVO -->
+      <a class="cta-locacao"
+         href="locacao.html"
+         onclick="gtag('event','click',{'event_category':'Locacao','event_label':'Botao Banner'});">
+          🖨️ Locação de Impressoras (Plano Mensal)
+          <span>R$ 500/mês • 5.000 páginas • Tintas + Manutenção inclusas</span>
+      </a>
+  </div>
 </div>
 
 <section>
@@ -244,6 +304,12 @@ footer {
            href="agendamento.html"
            onclick="gtag('event','click',{'event_category':'Agendamento','event_label':'Botao Contato'});">
            🗓️ Agendar Avaliação
+        </a>
+
+        <a class="locacao"
+           href="locacao.html"
+           onclick="gtag('event','click',{'event_category':'Locacao','event_label':'Botao Contato'});">
+           🖨️ Locação de Impressoras
         </a>
 
         <a class="instagram"

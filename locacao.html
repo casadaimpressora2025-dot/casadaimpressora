@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Locação de Impressoras | Casa da Impressora</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; color:#222; }
+header { background:#0b5ed7; color:#fff; padding:25px; text-align:center; }
+main { max-width:1100px; margin:30px auto; padding:0 15px; }
+h2 { margin-top:40px; }
+.card { background:#fff; border-radius:12px; padding:20px; margin-bottom:25px; box-shadow:0 0 12px rgba(0,0,0,.08); }
+
+.gallery {
+  display:grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap:15px;
+}
+.gallery img {
+  width:100%;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.gallery img:hover { transform:scale(1.03); }
+
+.video iframe { width:100%; height:420px; border-radius:12px; }
+
+ul { padding-left:20px; }
+.price { font-size:28px; font-weight:900; color:#0b5ed7; }
+
+label { font-weight:700; margin-top:12px; display:block; }
+input { width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px; }
+
+.result { margin-top:15px; font-weight:700; }
+
+button {
+  margin-top:20px;
+  padding:14px;
+  width:100%;
+  background:#0b5ed7;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+button:hover { background:#084298; }
+
+.contract {
+  font-size:14px;
+  line-height:1.6;
+  white-space:pre-line;
+  background:#fafafa;
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:20px;
+}
+footer { text-align:center; margin:30px 0; color:#666; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Locação de Impressoras</h1>
+  <p>Casa da Impressora • Solução completa para sua empresa</p>
+</header>
+
+<main>
+
+<div class="card">
+  <h2>HP OfficeJet Pro 8610</h2>
+  <p class="price">R$ 500,00 / mês</p>
+
+  <ul>
+    <li>Impressão colorida profissional</li>
+    <li>Tinta pigmentada ou corante</li>
+    <li>Sistema de tinta de alto rendimento</li>
+    <li>Manutenção inclusa</li>
+    <li>Tintas inclusas</li>
+    <li>Troca do equipamento em caso de falha</li>
+    <li>Prazo de entrega: até <strong>15 dias</strong></li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>Galeria do Equipamento</h2>
+  <div class="gallery">
+    <img src="imghp1.jpeg">
+    <img src="imghp2.jpeg">
+    <img src="imghp3.jpeg">
+    <img src="imghp4.jpeg">
+    <img src="imghp5.jpeg">
+    <img src="imghp6.jpeg">
+    <img src="imghp7.jpeg">
+  </div>
+</div>
+
+<div class="card video">
+  <h2>Vídeo do Equipamento</h2>
+  <iframe src="https://www.youtube.com/embed/uPhKGnC9QfA" allowfullscreen></iframe>
+</div>
+
+<div class="card">
+  <h2>Simular Contratação</h2>
+
+  <label>Quantidade média de páginas por mês</label>
+  <input type="number" id="paginas" placeholder="Ex: 6000">
+
+  <div class="result" id="resultado"></div>
+
+  <button onclick="simular()">Enviar simulação no WhatsApp</button>
+</div>
+
+<div class="card">
+  <h2>Contrato de Locação (Resumo)</h2>
+
+  <div class="contract">
+CONTRATO DE LOCAÇÃO DE EQUIPAMENTO DE IMPRESSÃO
+
+1. OBJETO  
+Locação de impressora HP OfficeJet Pro 8610.
+
+2. VALOR  
+R$ 500,00 mensais, com franquia de 5.000 páginas/mês.
+
+3. FRANQUIA  
+Excedente cobrado a R$ 0,12 por página adicional.
+Caso o volume ultrapasse o equivalente a duas franquias, será incluído automaticamente um segundo equipamento sem custo adicional de locação.
+
+4. PRAZO  
+Contrato mínimo de 12 meses.
+
+5. MANUTENÇÃO E INSUMOS  
+Inclusos manutenção preventiva, corretiva e fornecimento de tintas.
+
+6. TROCA DE EQUIPAMENTO  
+Em caso de falha irreparável, a LOCADORA realizará a substituição do equipamento.
+
+7. ENTREGA  
+Prazo de até 15 dias após assinatura do contrato.
+
+8. RESPONSABILIDADES  
+O cliente se compromete a utilizar o equipamento corretamente e zelar por sua integridade.
+
+Contrato completo será enviado após aprovação da simulação.
+  </div>
+</div>
+
+</main>
+
+<footer>
+© 2026 Casa da Impressora
+</footer>
+
+<script>
+function simular(){
+  const paginas = Number(document.getElementById("paginas").value || 0);
+  const franquia = 5000;
+  const valorBase = 500;
+  const excedente = Math.max(0, paginas - franquia);
+  const custoExtra = excedente * 0.12;
+
+  const equipamentos = paginas > franquia * 2 ? 2 : 1;
+  const total = valorBase + custoExtra;
+
+  document.getElementById("resultado").innerHTML = `
+    Equipamentos: ${equipamentos}<br>
+    Excedente: ${excedente} páginas<br>
+    Valor adicional: R$ ${custoExtra.toFixed(2)}<br>
+    <strong>Total estimado: R$ ${total.toFixed(2)} / mês</strong>
+  `;
+
+  const msg = `
+Simulação de locação HP 8610:
+
+Páginas/mês: ${paginas}
+Equipamentos: ${equipamentos}
+Valor mensal estimado: R$ ${total.toFixed(2)}
+
+Gostaria de avançar com a contratação.
+  `.trim();
+
+  window.open("https://wa.me/5588993687542?text=" + encodeURIComponent(msg), "_blank");
+}
+</script>
+
+</body>
+</html>
