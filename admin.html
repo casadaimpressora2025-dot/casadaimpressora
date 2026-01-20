@@ -1,212 +1,647 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Painel Administrativo | Casa da Impressora</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Admin | Casa da Impressora</title>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f4f6f8;
-  margin:0;
-}
+  body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; }
+  header { background:#0b5ed7; color:#fff; padding:18px; text-align:center; display:none; }
+  main { max-width: 1100px; margin: 20px auto; padding: 0 14px; display:none; }
+  .card { background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.08); padding:16px; margin-bottom:14px; }
+  h2 { margin:0 0 10px; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  .controls .field { display:flex; flex-direction:column; gap:6px; }
+  label { font-weight:700; font-size: 13px; color:#123; }
+  input, select, button { padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; }
+  button { cursor:pointer; border:none; }
+  .btn { background:#0b5ed7; color:#fff; font-weight:800; }
+  .btn:hover { filter:brightness(.95); }
+  .btn-ghost { background:#e9f2ff; color:#0b5ed7; font-weight:800; border:1px solid #bcd3ff; }
+  .btn-danger { background:#e53935; color:#fff; font-weight:800; }
+  .muted { color:#666; font-size:13px; }
+  .table-wrap { overflow:auto; border-radius:10px; border:1px solid #e6e6e6; }
+  table { width:100%; border-collapse:collapse; min-width: 980px; background:#fff; }
+  th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
+  th { background:#f7f9fc; position:sticky; top:0; z-index:1; }
+  .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f1f1f1; font-weight:800; font-size:12px; }
+  .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .small { font-size:12px; }
+  .ok { color:#1b7f2a; font-weight:800; }
+  .err { color:#b00020; font-weight:800; }
 
-header {
-  background:#0b5ed7;
-  color:#fff;
-  text-align:center;
-  padding:20px;
-}
-
-main {
-  max-width:1100px;
-  margin:20px auto;
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-}
-
-table {
-  width:100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  border-bottom:1px solid #ddd;
-  padding:10px;
-  text-align:left;
-  font-size:14px;
-}
-
-th {
-  background:#f0f0f0;
-}
-
-button {
-  padding:6px 10px;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-}
-
-.btn-print { background:#198754; color:#fff; }
-.btn-del { background:#dc3545; color:#fff; }
-
-.login-box {
-  max-width:360px;
-  margin:80px auto;
-  background:#fff;
-  padding:25px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,.1);
-}
-
-.login-box input {
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-}
-
-.login-box button {
-  width:100%;
-  margin-top:15px;
-  background:#0b5ed7;
-  color:#fff;
-  font-size:16px;
-}
+  /* Login */
+  #loginBox {
+    max-width:520px;
+    margin:40px auto;
+    background:#fff;
+    padding:18px;
+    border-radius:12px;
+    box-shadow:0 0 12px rgba(0,0,0,.08);
+  }
+  #loginBox h2 { margin:0 0 10px; }
+  #loginBox .row { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+  #loginBtn { width:100%; padding:12px; border-radius:10px; background:#0b5ed7; color:#fff; font-weight:900; }
+  #logoutBtn {
+    margin-top:10px;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.6);
+    background:transparent;
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+    margin-left:10px;
+  }
 </style>
 </head>
 
 <body>
 
-<div id="login" class="login-box">
-  <h2>Acesso Administrativo</h2>
-  <input id="user" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
-  <p id="loginErro" style="color:red;"></p>
+<!-- LOGIN / SENHA -->
+<div id="loginBox">
+  <h2>Acesso do Administrador</h2>
+  <p class="muted" style="margin:0;">Digite usuário e senha para acessar o painel.</p>
+
+  <div class="row">
+    <label for="user">Usuário</label>
+    <input id="user" value="casa" autocomplete="username" />
+  </div>
+
+  <div class="row">
+    <label for="pass">Senha</label>
+    <input id="pass" type="password" placeholder="Sua senha" autocomplete="current-password" />
+  </div>
+
+  <button id="loginBtn">Entrar</button>
+  <p id="loginMsg" class="err" style="margin:12px 0 0;"></p>
+
+  <p class="muted small" style="margin-top:12px;">
+    Dica: depois de logar, você fica logado por 12 horas neste navegador.
+  </p>
 </div>
 
-<header id="topo" style="display:none;">
-  <h1>Painel Administrativo</h1>
-  <p>Casa da Impressora</p>
+<header id="hdr">
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+    <div>
+      <h1 style="margin:0;">Painel Administrativo</h1>
+      <div class="muted" style="color:rgba(255,255,255,.9);">Casa da Impressora • Agendamentos (Firestore)</div>
+    </div>
+    <button id="logoutBtn">Sair</button>
+  </div>
 </header>
 
-<main id="painel" style="display:none;">
-  <h2>Agendamentos</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>OS</th>
-        <th>Data</th>
-        <th>Cliente</th>
-        <th>Telefone</th>
-        <th>Equipamento</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="lista"></tbody>
-  </table>
+<main id="main">
+  <div class="card">
+    <h2>Filtros</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="filtroData">Data (opcional)</label>
+        <input type="date" id="filtroData" />
+      </div>
+
+      <div class="field" style="min-width:260px; flex:1;">
+        <label for="busca">Buscar (nome/telefone/modelo/OS)</label>
+        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007" />
+      </div>
+
+      <div class="field">
+        <label for="statusFiltro">Status</label>
+        <select id="statusFiltro">
+          <option value="">Todos</option>
+          <option>Recebido</option>
+          <option>Em avaliação</option>
+          <option>Orçamento enviado</option>
+          <option>Aguardando aprovação</option>
+          <option>Aprovado</option>
+          <option>Reprovado</option>
+          <option>Concluído</option>
+        </select>
+      </div>
+
+      <button class="btn" id="btnRecarregar">Recarregar</button>
+      <button class="btn-ghost" id="btnLimpar">Limpar filtros</button>
+    </div>
+
+    <div style="margin-top:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div class="muted" id="info">Carregando...</div>
+      <div class="muted" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Agendamentos</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>OS / Data</th>
+            <th>Cliente</th>
+            <th>Contato</th>
+            <th>Equipamento</th>
+            <th>Problema</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="7" class="muted">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted small" style="margin-top:10px;">
+      Dica: você pode mudar o status e clicar em <strong>Salvar</strong> na mesma linha.
+    </p>
+  </div>
 </main>
 
 <script type="module">
 import { db } from "./firebase.js";
 import {
-  collection, getDocs, doc, deleteDoc
+  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// LOGIN SIMPLES
-window.login = function () {
-  const u = document.getElementById("user").value;
-  const p = document.getElementById("pass").value;
+/* ======================
+   LOGIN/SENHA
+   ====================== */
 
-  if (u === "casa" && p === "imp153624") {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("painel").style.display = "block";
-    document.getElementById("topo").style.display = "block";
-    carregar();
-  } else {
-    document.getElementById("loginErro").innerText = "Usuário ou senha inválidos";
-  }
-};
+// credenciais
+const USER_OK = "casa";
 
-async function carregar() {
-  const snap = await getDocs(collection(db,"agendamentos"));
-  const tbody = document.getElementById("lista");
-  tbody.innerHTML = "";
+// HASH SHA-256 da senha "imp153624"
+const PASS_HASH_OK = "f3dc22619a2e17bdc8ce3ca5419002320d2b596eb1829d341a321c596e9fca5d";
 
-  snap.forEach(d => {
-    const a = d.data();
-    const os = a.osCodigo || "—";
+// sessão 12h
+const SESSION_KEY = "admin_session_v2";
+const SESSION_HOURS = 12;
 
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${os}</strong></td>
-        <td>${a.data}</td>
-        <td>${a.nome}</td>
-        <td>${a.telefone}</td>
-        <td>${a.modelo}</td>
-        <td>${a.status}</td>
-        <td>
-          <button class="btn-print" onclick='imprimir(${JSON.stringify(a)})'>Imprimir</button>
-          <button class="btn-del" onclick="excluir('${d.id}')">Excluir</button>
-        </td>
-      </tr>
-    `;
-  });
+const loginBox = document.getElementById("loginBox");
+const hdr = document.getElementById("hdr");
+const main = document.getElementById("main");
+const loginMsg = document.getElementById("loginMsg");
+
+const userEl = document.getElementById("user");
+const passEl = document.getElementById("pass");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+async function sha256(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
 }
 
-window.excluir = async function(id) {
-  if(confirm("Excluir este agendamento?")) {
-    await deleteDoc(doc(db,"agendamentos",id));
-    carregar();
+function setLoggedIn(on) {
+  loginBox.style.display = on ? "none" : "block";
+  hdr.style.display = on ? "block" : "none";
+  main.style.display = on ? "block" : "none";
+}
+
+function saveSession() {
+  const until = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
+  localStorage.setItem(SESSION_KEY, String(until));
+}
+
+function hasSession() {
+  const until = Number(localStorage.getItem(SESSION_KEY) || "0");
+  return until && Date.now() < until;
+}
+
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem(SESSION_KEY);
+  location.reload();
+});
+
+loginBtn.addEventListener("click", async () => {
+  loginMsg.textContent = "";
+  const u = (userEl.value || "").trim();
+  const p = passEl.value || "";
+
+  if (u !== USER_OK) {
+    loginMsg.textContent = "Usuário inválido.";
+    return;
   }
-};
 
-window.imprimir = function(a) {
-  const w = window.open("", "_blank");
+  const hash = await sha256(p);
+  if (hash !== PASS_HASH_OK) {
+    loginMsg.textContent = "Senha incorreta.";
+    return;
+  }
 
-  w.document.write(`
-  <html><head><title>OS ${a.osCodigo}</title>
-  <style>
-    body { font-family: Arial; margin:6mm; font-size:10px; }
-    .via { border:1px solid #000; padding:8px; margin-bottom:6mm; }
-    .titulo { text-align:center; font-weight:bold; font-size:12px; }
-    .os { text-align:center; font-size:14px; font-weight:bold; margin:4px 0; }
-    .linha { margin-bottom:3px; }
-    .corte { border-top:2px dashed #000; margin:6mm 0; }
-  </style>
-  </head><body>
+  saveSession();
+  setLoggedIn(true);
+  carregar();
+});
 
-  <div class="via">
-    <div class="titulo">VIA DA LOJA</div>
-    <div class="os">${a.osCodigo}</div>
-    <div class="linha"><b>Cliente:</b> ${a.nome}</div>
-    <div class="linha"><b>Telefone:</b> ${a.telefone}</div>
-    <div class="linha"><b>Equipamento:</b> ${a.modelo}</div>
-    <div class="linha"><b>Tipo:</b> ${a.tipo}</div>
-    <div class="linha"><b>Entrada:</b> ${a.data}</div>
-    <div class="linha"><b>Problema:</b> ${a.problema || "-"}</div>
+passEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loginBtn.click();
+});
+
+// auto-login por sessão
+if (hasSession()) {
+  setLoggedIn(true);
+  carregar();
+} else {
+  setLoggedIn(false);
+}
+
+/* ======================
+   PAINEL ADMIN
+   ====================== */
+
+const tbody = document.getElementById("tbody");
+const info = document.getElementById("info");
+const statusMsg = document.getElementById("statusMsg");
+
+const filtroData = document.getElementById("filtroData");
+const busca = document.getElementById("busca");
+const statusFiltro = document.getElementById("statusFiltro");
+const btnRecarregar = document.getElementById("btnRecarregar");
+const btnLimpar = document.getElementById("btnLimpar");
+
+const STATUS_OPCOES = [
+  "Recebido",
+  "Em avaliação",
+  "Orçamento enviado",
+  "Aguardando aprovação",
+  "Aprovado",
+  "Reprovado",
+  "Concluído"
+];
+
+function setMsg(texto, tipo="") {
+  statusMsg.className = tipo === "ok" ? "ok" : tipo === "err" ? "err" : "muted";
+  statusMsg.textContent = texto || "";
+}
+
+function normalizar(str) {
+  return (str || "").toString().toLowerCase();
+}
+
+function montarSelectStatus(valorAtual) {
+  return `
+    <select class="statusSelect">
+      ${STATUS_OPCOES.map(s => `<option ${s===valorAtual ? "selected":""}>${s}</option>`).join("")}
+    </select>
+  `;
+}
+
+function limparTabela(mensagem="Carregando...") {
+  tbody.innerHTML = `<tr><td colspan="7" class="muted">${mensagem}</td></tr>`;
+}
+
+function escapeHtml(str) {
+  return (str ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+/* ===========
+   IMPRESSÃO 2 VIAS (SÓ REDIMENSIONADO PRA CABER 1 A4)
+   =========== */
+function imprimirOS2Vias(dados, id) {
+  const logoUrl = new URL("./logo.png", window.location.href).toString();
+
+  const osCurta = escapeHtml(dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`);
+  const cliente = escapeHtml(dados.nome || "");
+  const telefone = escapeHtml(dados.telefone || "");
+  const dataEntrega = escapeHtml(dados.data || "");
+  const modelo = escapeHtml(dados.modelo || "");
+  const tipo = escapeHtml(dados.tipo || "");
+  const problema = escapeHtml(dados.problema || "Não informado");
+  const status = escapeHtml(dados.status || "Recebido");
+
+  const osHtml = (tituloVia) => `
+    <div class="via">
+      <div class="via-title">${tituloVia}</div>
+
+      <div class="top">
+        <div class="brand">
+          <img src="${logoUrl}" alt="Casa da Impressora"/>
+          <div>
+            <div style="font-weight:900; font-size:14px;">Casa da Impressora</div>
+            <div style="font-size:10.5px; color:#333;">Assistência Técnica em Impressão</div>
+            <div style="font-size:10.5px; color:#333;">WhatsApp: (88) 99368-7542</div>
+          </div>
+        </div>
+
+        <div class="title">
+          <h1>ORDEM DE SERVIÇO</h1>
+          <div class="small">Nº OS: <span class="pill">${osCurta}</span></div>
+          <div class="small">Status: <span class="pill">${status}</span></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="box">
+          <h3>Dados do Cliente</h3>
+          <div class="line"><span class="label">Cliente:</span> ${cliente}</div>
+          <div class="line"><span class="label">Telefone:</span> ${telefone}</div>
+          <div class="line"><span class="label">Data de entrega:</span> ${dataEntrega}</div>
+        </div>
+
+        <div class="box">
+          <h3>Equipamento</h3>
+          <div class="line"><span class="label">Modelo:</span> ${modelo}</div>
+          <div class="line"><span class="label">Tipo:</span> ${tipo}</div>
+          <div class="line"><span class="label">Acessórios:</span> __________________________</div>
+          <div class="line"><span class="label">Senha/Pin:</span> __________________________</div>
+        </div>
+
+        <div class="box big">
+          <h3>Problema informado</h3>
+          <div class="line">${problema}</div>
+        </div>
+
+        <div class="box big2">
+          <h3>Observações técnicas (preencher na loja)</h3>
+          <div class="line">______________________________________________________________</div>
+          <div class="line">______________________________________________________________</div>
+          <div class="line">______________________________________________________________</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>Prazo para avaliação e orçamento:</strong> até ______ dia(s) útil(eis) após a entrega.
+      </div>
+
+      <div class="box" style="margin-top:6px;">
+        <h3>Condições</h3>
+        <div class="terms">
+          1) O orçamento será realizado após avaliação técnica. <br/>
+          2) Peças e serviços somente mediante aprovação do cliente. <br/>
+          3) Equipamentos não retirados em até 30 dias após conclusão podem gerar taxa de armazenamento. <br/>
+          4) Caso o serviço não seja aprovado, poderá ser cobrada taxa de diagnóstico (se aplicável).
+        </div>
+      </div>
+
+      <div class="sign">
+        <div class="sigline">Assinatura do Cliente</div>
+        <div class="sigline">Assinatura / Responsável Técnico</div>
+      </div>
+
+      <div class="footer">
+        <div>Data: ____/____/______</div>
+        <div>OS: ${osCurta}</div>
+      </div>
+    </div>
+  `.trim();
+
+  const html = `
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OS ${osCurta} (2 vias)</title>
+<style>
+  /* ✅ AJUSTE PRA CABER 2 VIAS EM 1 A4 */
+  @page { size: A4; margin: 6mm; }
+  body { font-family: Arial, sans-serif; color:#111; margin:0; }
+  .wrap { border: 2px solid #111; padding: 5mm; border-radius: 8px; }
+
+  .via { page-break-inside: avoid; }
+  .via-title { font-weight:900; font-size:12px; margin-bottom:6px; }
+
+  .top { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
+  .brand { display:flex; gap:10px; align-items:center; }
+  .brand img { width: 78px; height:auto; }
+
+  .title { text-align:right; }
+  .title h1 { margin:0; font-size: 15px; }
+  .title .small { font-size: 10px; color:#333; margin-top:3px; }
+
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
+
+  .box { border:1px solid #111; border-radius:8px; padding:7px; }
+  .box h3 { margin:0 0 5px 0; font-size: 11px; }
+
+  .line { margin: 3px 0; font-size: 10.5px; }
+  .label { font-weight: 700; }
+
+  /* reduz altura mínima para não estourar a folha */
+  .big { min-height: 52px; }
+  .big2 { min-height: 62px; }
+
+  .terms { font-size: 9.6px; color:#222; line-height:1.25; }
+  .sign { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
+  .sign .sigline { margin-top:14px; border-top:1px solid #111; padding-top:5px; font-size: 10px; }
+  .footer { margin-top:6px; font-size: 10px; color:#333; display:flex; justify-content:space-between; }
+
+  .pill { display:inline-block; padding:2px 8px; border:1px solid #111; border-radius:999px; font-weight:700; font-size:10px; }
+  .note { font-size: 10px; margin-top:6px; }
+
+  .corte { border:0; border-top:2px dashed #111; margin:8px 0; }
+
+  .no-print { margin-top:8px; display:flex; gap:10px; }
+  button { padding:8px 12px; border-radius:8px; border:1px solid #111; background:#fff; font-weight:800; cursor:pointer; font-size: 12px; }
+  .primary { background:#0b5ed7; color:#fff; border-color:#0b5ed7; }
+  @media print { .no-print { display:none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    ${osHtml("VIA DA LOJA")}
+    <hr class="corte"/>
+    ${osHtml("VIA DO CLIENTE")}
+
+    <div class="no-print">
+      <button class="primary" onclick="window.print()">Imprimir</button>
+      <button onclick="window.close()">Fechar</button>
+    </div>
   </div>
+</body>
+</html>
+  `.trim();
 
-  <hr class="corte">
+  const w = window.open("", "_blank", "width=900,height=700");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
 
-  <div class="via">
-    <div class="titulo">VIA DO CLIENTE</div>
-    <div class="os">${a.osCodigo}</div>
-    <div class="linha"><b>Cliente:</b> ${a.nome}</div>
-    <div class="linha"><b>Equipamento:</b> ${a.modelo}</div>
-    <div class="linha"><b>Entrada:</b> ${a.data}</div>
-    <div class="linha">Assinatura: ____________________________</div>
-  </div>
+async function carregar() {
+  setMsg("");
+  limparTabela("Carregando...");
+  info.textContent = "Carregando do Firestore...";
 
-  </body></html>
-  `);
+  try {
+    let q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
 
-  w.print();
-};
+    if (filtroData.value) {
+      q = query(
+        collection(db, "agendamentos"),
+        where("data", "==", filtroData.value),
+        orderBy("criadoEm", "desc")
+      );
+    }
+
+    if (statusFiltro.value) {
+      if (filtroData.value) {
+        q = query(
+          collection(db, "agendamentos"),
+          where("data", "==", filtroData.value),
+          where("status", "==", statusFiltro.value),
+          orderBy("criadoEm", "desc")
+        );
+      } else {
+        q = query(
+          collection(db, "agendamentos"),
+          where("status", "==", statusFiltro.value),
+          orderBy("criadoEm", "desc")
+        );
+      }
+    }
+
+    const snap = await getDocs(q);
+
+    const termo = normalizar(busca.value);
+    const rows = [];
+
+    snap.forEach((d) => {
+      const dados = d.data();
+      const id = d.id;
+
+      const osCodigo = dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`;
+
+      const haystack = normalizar(
+        `${osCodigo} ${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
+      );
+      if (termo && !haystack.includes(termo)) return;
+
+      const tel = (dados.telefone || "").replace(/\D/g, "");
+      const telWpp = tel.startsWith("55") ? tel : (tel ? "55" + tel : "");
+      const msgWpp = encodeURIComponent(
+        `Olá, ${dados.nome || ""}! Aqui é da Casa da Impressora.\n\nSua OS é ${osCodigo}.\nStatus: ${dados.status || ""}.\n\nSe precisar, responda por aqui.`
+      );
+
+      rows.push(`
+        <tr data-id="${id}"
+            data-json="${escapeHtml(JSON.stringify({
+              osCodigo: dados.osCodigo || "",
+              osNumero: dados.osNumero || null,
+              nome: dados.nome || "",
+              telefone: dados.telefone || "",
+              data: dados.data || "",
+              modelo: dados.modelo || "",
+              tipo: dados.tipo || "",
+              problema: dados.problema || "",
+              status: dados.status || "Recebido"
+            }))}">
+          <td>
+            <div class="pill">${escapeHtml(osCodigo)}</div>
+            <div class="muted small" style="margin-top:6px;">📅 ${escapeHtml(dados.data || "-")}</div>
+          </td>
+          <td><strong>${escapeHtml(dados.nome || "-")}</strong></td>
+          <td>
+            <div>${escapeHtml(dados.telefone || "-")}</div>
+            ${telWpp ? `<a class="small" href="https://wa.me/${telWpp}?text=${msgWpp}" target="_blank">Abrir WhatsApp</a>` : ""}
+          </td>
+          <td>
+            <div><strong>${escapeHtml(dados.modelo || "-")}</strong></div>
+            <div class="muted small">${escapeHtml(dados.tipo || "-")}</div>
+          </td>
+          <td class="small">${escapeHtml(dados.problema || "—")}</td>
+          <td>
+            ${montarSelectStatus(dados.status || "Recebido")}
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn-ghost imprimirBtn">Imprimir 2 vias</button>
+              <button class="btn salvarBtn">Salvar</button>
+              <button class="btn-danger excluirBtn">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `);
+    });
+
+    if (!rows.length) {
+      limparTabela("Nenhum agendamento encontrado com esses filtros.");
+      info.textContent = "0 resultados.";
+      return;
+    }
+
+    tbody.innerHTML = rows.join("");
+    info.textContent = `${rows.length} agendamento(s) exibido(s).`;
+  } catch (err) {
+    console.error(err);
+    limparTabela("Erro ao carregar. Veja o Console (F12).");
+    info.textContent = "Erro ao carregar.";
+    setMsg("Erro ao ler Firestore. Confira regras/permissões.", "err");
+  }
+}
+
+tbody.addEventListener("click", async (e) => {
+  const tr = e.target.closest("tr[data-id]");
+  if (!tr) return;
+
+  const id = tr.getAttribute("data-id");
+  const select = tr.querySelector(".statusSelect");
+
+  if (e.target.classList.contains("imprimirBtn")) {
+    try {
+      const json = tr.getAttribute("data-json") || "{}";
+      const dados = JSON.parse(json);
+      dados.status = select?.value || dados.status || "Recebido";
+      imprimirOS2Vias(dados, id);
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao gerar OS (veja Console F12)", "err");
+    }
+    return;
+  }
+
+  if (e.target.classList.contains("salvarBtn")) {
+    const novoStatus = select.value;
+
+    try {
+      await updateDoc(doc(db, "agendamentos", id), { status: novoStatus });
+      setMsg("Status atualizado com sucesso ✅", "ok");
+      await carregar();
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao salvar status ❌ (veja Console F12)", "err");
+    }
+  }
+
+  if (e.target.classList.contains("excluirBtn")) {
+    const ok = confirm("Tem certeza que deseja excluir esse agendamento?");
+    if (!ok) return;
+
+    try {
+      await deleteDoc(doc(db, "agendamentos", id));
+      setMsg("Agendamento excluído ✅", "ok");
+      await carregar();
+    } catch (err) {
+      console.error(err);
+      setMsg("Erro ao excluir ❌ (veja Console F12)", "err");
+    }
+  }
+});
+
+btnRecarregar.addEventListener("click", carregar);
+
+btnLimpar.addEventListener("click", () => {
+  filtroData.value = "";
+  busca.value = "";
+  statusFiltro.value = "";
+  carregar();
+});
+
+busca.addEventListener("input", () => {
+  clearTimeout(window.__t);
+  window.__t = setTimeout(() => carregar(), 250);
+});
+
+filtroData.addEventListener("change", carregar);
+statusFiltro.addEventListener("change", carregar);
 </script>
 
 </body>
