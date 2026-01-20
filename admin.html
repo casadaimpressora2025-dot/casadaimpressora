@@ -22,7 +22,7 @@
   .btn-danger { background:#e53935; color:#fff; font-weight:800; }
   .muted { color:#666; font-size:13px; }
   .table-wrap { overflow:auto; border-radius:10px; border:1px solid #e6e6e6; }
-  table { width:100%; border-collapse:collapse; min-width: 980px; background:#fff; }
+  table { width:100%; border-collapse:collapse; min-width: 1020px; background:#fff; }
   th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
   th { background:#f7f9fc; position:sticky; top:0; z-index:1; }
   .pill { display:inline-block; padding:6px 10px; border-radius:999px; background:#f1f1f1; font-weight:800; font-size:12px; }
@@ -31,11 +31,24 @@
   .ok { color:#1b7f2a; font-weight:800; }
   .err { color:#b00020; font-weight:800; }
 
-  /* Badge tipo */
-  .tag { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-weight:900; font-size:11px; border:1px solid; }
+  /* ====== DIFERENCIAÇÃO VISUAL (Nº 1) ====== */
+  .tag {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:999px;
+    font-weight:900;
+    font-size:11px;
+    border:1px solid;
+    white-space:nowrap;
+  }
   .tag-ag { background:#e9f2ff; color:#0b5ed7; border-color:#bcd3ff; }
   .tag-loc { background:#fff3e0; color:#b45309; border-color:#f7c68a; }
-  .loc-row { background: #fffaf2; }
+
+  /* linha de locação com “cara de locação” */
+  tr.loc-row td { background:#fffaf2; }
+  tr.loc-row:hover td { background:#fff2db; }
 
   /* Login */
   #loginBox {
@@ -108,8 +121,8 @@
       </div>
 
       <div class="field" style="min-width:260px; flex:1;">
-        <label for="busca">Buscar (nome/telefone/modelo/OS/locação)</label>
-        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007 / HP 8610" />
+        <label for="busca">Buscar (nome/telefone/modelo/OS/LOC)</label>
+        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007 / LOC-0001" />
       </div>
 
       <div class="field">
@@ -125,6 +138,8 @@
         <label for="statusFiltro">Status</label>
         <select id="statusFiltro">
           <option value="">Todos</option>
+
+          <!-- Agendamento -->
           <option>Recebido</option>
           <option>Em avaliação</option>
           <option>Orçamento enviado</option>
@@ -133,6 +148,7 @@
           <option>Reprovado</option>
           <option>Concluído</option>
 
+          <!-- Locação -->
           <option>Proposta enviada</option>
           <option>Em análise</option>
           <option>Contrato enviado</option>
@@ -468,7 +484,7 @@ function imprimirOS2Vias(dados, id) {
   w.focus();
 }
 
-/* =========== carregar unificado =========== */
+/* ====== CARREGAR UNIFICADO ====== */
 async function carregar() {
   setMsg("");
   limparTabela("Carregando...");
@@ -482,7 +498,7 @@ async function carregar() {
 
     const itens = [];
 
-    // --- AGENDAMENTOS
+    // AGENDAMENTOS
     if (!tipoFiltrado || tipoFiltrado === "agendamento") {
       const qAg = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
       const snapAg = await getDocs(qAg);
@@ -498,20 +514,28 @@ async function carregar() {
           telefone: dados.telefone || "",
           modelo: dados.modelo || "",
           tipoEquip: dados.tipo || "",
-          problema: dados.problema || "",
+          detalhes: dados.problema || "",
           status: dados.status || "Recebido",
-          osCodigo: dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`
+          codigo: dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`
         });
       });
     }
 
-    // --- LOCAÇÕES
+    // LOCAÇÕES
     if (!tipoFiltrado || tipoFiltrado === "locacao") {
       const qLoc = query(collection(db, "locacoes"), orderBy("criadoEm", "desc"));
       const snapLoc = await getDocs(qLoc);
       snapLoc.forEach((d) => {
         const dados = d.data();
         const id = d.id;
+
+        const paginasMes = dados.paginasMes ?? dados.paginas ?? "";
+        const totalMensal = dados.totalMensal ?? "";
+        const detalheLoc = [
+          paginasMes ? `Páginas/mês: ${paginasMes}` : "",
+          totalMensal !== "" ? `Total estimado: R$ ${Number(totalMensal).toFixed(2)}` : ""
+        ].filter(Boolean).join(" • ");
+
         itens.push({
           tipo: "locacao",
           id,
@@ -520,33 +544,25 @@ async function carregar() {
           nome: dados.nome || dados.cliente || "",
           telefone: dados.telefone || dados.whatsapp || "",
           modelo: dados.modelo || "HP OfficeJet Pro 8610",
-          tipoEquip: dados.plano || "Locação",
-          problema: dados.obs || dados.paginasMes ? `Páginas/mês: ${dados.paginasMes}` : (dados.observacoes || ""),
+          tipoEquip: "Locação • R$ 500/mês",
+          detalhes: detalheLoc || (dados.obs || dados.observacoes || ""),
           status: dados.status || "Proposta enviada",
           codigo: dados.locacaoCodigo || `LOC-${id.slice(0,6).toUpperCase()}`
         });
       });
     }
 
-    // Ordena por criadoEm desc
+    // ordena por mais recente
     itens.sort((a,b) => (b.criadoEm||0) - (a.criadoEm||0));
 
-    // Filtra localmente por data/status/busca
+    // filtros locais
     const filtrados = itens.filter((it) => {
       if (dataFiltrada && (it.data || "") !== dataFiltrada) return false;
       if (statusFiltrado && (it.status || "") !== statusFiltrado) return false;
-
       if (termo) {
         const hay = normalizar([
-          it.tipo,
-          it.nome,
-          it.telefone,
-          it.modelo,
-          it.tipoEquip,
-          it.problema,
-          it.status,
-          it.osCodigo || it.codigo || "",
-          it.data
+          it.tipo, it.codigo, it.data, it.nome, it.telefone,
+          it.modelo, it.tipoEquip, it.detalhes, it.status
         ].join(" "));
         if (!hay.includes(termo)) return false;
       }
@@ -565,25 +581,16 @@ async function carregar() {
         ? `<span class="tag tag-loc">🏷️ LOCAÇÃO</span>`
         : `<span class="tag tag-ag">🛠️ AGENDAMENTO</span>`;
 
-      const codigo = isLoc ? (it.codigo || "-") : (it.osCodigo || "-");
-
       const tel = (it.telefone || "").replace(/\D/g, "");
       const telWpp = tel.startsWith("55") ? tel : (tel ? "55" + tel : "");
       const msgWpp = encodeURIComponent(
-        `Olá, ${it.nome || ""}! Aqui é da Casa da Impressora.\n\n${isLoc ? "Locação" : "OS"}: ${codigo}\nStatus: ${it.status || ""}\n\nSe precisar, responda por aqui.`
+        `Olá, ${it.nome || ""}! Aqui é da Casa da Impressora.\n\n${isLoc ? "Locação" : "OS"}: ${it.codigo}\nStatus: ${it.status || ""}\n\nSe precisar, responda por aqui.`
       );
 
       const dataJson = escapeHtml(JSON.stringify({
-        tipo: it.tipo,
-        nome: it.nome,
-        telefone: it.telefone,
-        data: it.data,
-        modelo: it.modelo,
-        tipo: it.tipoEquip,
-        problema: it.problema,
-        status: it.status,
-        osCodigo: it.osCodigo || "",
-        codigo: it.codigo || ""
+        nome: it.nome, telefone: it.telefone, data: it.data,
+        modelo: it.modelo, tipo: it.tipoEquip, problema: it.detalhes,
+        status: it.status, osCodigo: isLoc ? "" : it.codigo, codigo: it.codigo
       }));
 
       return `
@@ -591,7 +598,7 @@ async function carregar() {
           <td>
             ${tag}
             <div style="margin-top:6px;">
-              <span class="pill">${escapeHtml(codigo)}</span>
+              <span class="pill">${escapeHtml(it.codigo)}</span>
             </div>
             <div class="muted small" style="margin-top:6px;">📅 ${escapeHtml(it.data || "-")}</div>
           </td>
@@ -608,7 +615,7 @@ async function carregar() {
             <div class="muted small">${escapeHtml(it.tipoEquip || "-")}</div>
           </td>
 
-          <td class="small">${escapeHtml(it.problema || "—")}</td>
+          <td class="small">${escapeHtml(it.detalhes || "—")}</td>
 
           <td>
             ${montarSelectStatus(it.status, it.tipo)}
@@ -640,7 +647,7 @@ tbody.addEventListener("click", async (e) => {
   if (!tr) return;
 
   const id = tr.getAttribute("data-id");
-  const tipo = tr.getAttribute("data-tipo"); // agendamento | locacao
+  const tipo = tr.getAttribute("data-tipo");
   const select = tr.querySelector(".statusSelect");
   const col = (tipo === "locacao") ? "locacoes" : "agendamentos";
 
