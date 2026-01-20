@@ -22,21 +22,34 @@ h2 { margin-top:40px; }
   border-radius:10px;
   cursor:pointer;
   transition:.2s;
+  object-fit: cover;
+  aspect-ratio: 4/3;
 }
 .gallery img:hover { transform:scale(1.03); }
 
-.video iframe { width:100%; height:420px; border-radius:12px; }
+.video iframe { width:100%; height:420px; border-radius:12px; border:0; }
 
 ul { padding-left:20px; }
 .price { font-size:28px; font-weight:900; color:#0b5ed7; }
 
 label { font-weight:700; margin-top:12px; display:block; }
-input { width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px; }
+input, select, textarea { width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px; font-size:14px; }
 
-.result { margin-top:15px; font-weight:700; }
+.grid-form {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+@media (max-width: 780px){
+  .grid-form { grid-template-columns: 1fr; }
+  .video iframe { height:320px; }
+}
+
+.result { margin-top:15px; font-weight:700; padding:12px; border-radius:10px; background:#f7f9fc; border:1px solid #e6e6e6; }
+.muted { color:#666; font-size:13px; margin-top:8px; }
 
 button {
-  margin-top:20px;
+  margin-top:14px;
   padding:14px;
   width:100%;
   background:#0b5ed7;
@@ -49,6 +62,13 @@ button {
 }
 button:hover { background:#084298; }
 
+button.secondary {
+  background:#e9f2ff;
+  color:#0b5ed7;
+  border:1px solid #bcd3ff;
+}
+button.secondary:hover { filter:brightness(.97); }
+
 .contract {
   font-size:14px;
   line-height:1.6;
@@ -58,7 +78,34 @@ button:hover { background:#084298; }
   border-radius:10px;
   padding:20px;
 }
+
 footer { text-align:center; margin:30px 0; color:#666; }
+
+.modal {
+  position:fixed; inset:0; background:rgba(0,0,0,.75);
+  display:none; align-items:center; justify-content:center;
+  padding:18px;
+  z-index:9999;
+}
+.modal img {
+  max-width:min(980px, 96vw);
+  max-height:88vh;
+  border-radius:14px;
+}
+.modal .close {
+  position:absolute; top:14px; right:14px;
+  background:#fff; border:none; border-radius:999px;
+  width:44px; height:44px; cursor:pointer; font-weight:900;
+}
+.badge {
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#e9f2ff;
+  color:#0b5ed7;
+  font-weight:900;
+  font-size:12px;
+}
 </style>
 </head>
 
@@ -72,30 +119,35 @@ footer { text-align:center; margin:30px 0; color:#666; }
 <main>
 
 <div class="card">
-  <h2>HP OfficeJet Pro 8610</h2>
+  <div class="badge">Plano de Locação</div>
+  <h2 style="margin:10px 0 0;">HP OfficeJet Pro 8610</h2>
   <p class="price">R$ 500,00 / mês</p>
 
   <ul>
     <li>Impressão colorida profissional</li>
     <li>Tinta pigmentada ou corante</li>
     <li>Sistema de tinta de alto rendimento</li>
-    <li>Manutenção inclusa</li>
-    <li>Tintas inclusas</li>
-    <li>Troca do equipamento em caso de falha</li>
+    <li><strong>Franquia:</strong> 5.000 páginas/mês</li>
+    <li><strong>+ R$ 0,12</strong> por página excedente</li>
+    <li><strong>Manutenção inclusa</strong></li>
+    <li><strong>Tintas inclusas</strong></li>
+    <li><strong>Troca do equipamento</strong> caso necessário</li>
     <li>Prazo de entrega: até <strong>15 dias</strong></li>
+    <li>Contrato mínimo: <strong>12 meses</strong></li>
   </ul>
 </div>
 
 <div class="card">
   <h2>Galeria do Equipamento</h2>
-  <div class="gallery">
-    <img src="imghp1.jpeg" alt="HP 8610 - Foto 1">
-    <img src="imghp2.jpeg" alt="HP 8610 - Foto 2">
-    <img src="imghp3.jpeg" alt="HP 8610 - Foto 3">
-    <img src="imghp4.jpeg" alt="HP 8610 - Foto 4">
-    <img src="imghp5.jpeg" alt="HP 8610 - Foto 5">
-    <img src="imghp6.jpeg" alt="HP 8610 - Foto 6">
-    <img src="imghp7.jpeg" alt="HP 8610 - Foto 7">
+  <p class="muted">Clique nas fotos para ampliar.</p>
+  <div class="gallery" id="gallery">
+    <img src="imghp1.jpeg" alt="HP 8610 - 1">
+    <img src="imghp2.jpeg" alt="HP 8610 - 2">
+    <img src="imghp3.jpeg" alt="HP 8610 - 3">
+    <img src="imghp4.jpeg" alt="HP 8610 - 4">
+    <img src="imghp5.jpeg" alt="HP 8610 - 5">
+    <img src="imghp6.jpeg" alt="HP 8610 - 6">
+    <img src="imghp7.jpeg" alt="HP 8610 - 7">
   </div>
 </div>
 
@@ -107,67 +159,83 @@ footer { text-align:center; margin:30px 0; color:#666; }
 <div class="card">
   <h2>Simular Contratação</h2>
 
-  <label>Quantidade média de páginas por mês</label>
-  <input type="number" id="paginas" placeholder="Ex: 6000">
+  <div class="grid-form">
+    <div>
+      <label>Nome</label>
+      <input type="text" id="nome" placeholder="Seu nome">
+    </div>
 
-  <div class="result" id="resultado"></div>
+    <div>
+      <label>WhatsApp</label>
+      <input type="text" id="whatsapp" placeholder="(88) 99999-9999">
+    </div>
 
-  <button onclick="simular()">Enviar simulação no WhatsApp</button>
+    <div>
+      <label>Quantidade média de páginas por mês</label>
+      <input type="number" id="paginas" placeholder="Ex: 6000">
+    </div>
+
+    <div>
+      <label>Preferência de tinta</label>
+      <select id="tinta">
+        <option value="Tanto faz">Tanto faz</option>
+        <option value="Pigmentada">Pigmentada</option>
+        <option value="Corante">Corante</option>
+      </select>
+    </div>
+  </div>
+
+  <label style="margin-top:12px;">Observações (opcional)</label>
+  <textarea id="obs" rows="3" placeholder="Ex: preciso emitir nota, endereço, horário de entrega..."></textarea>
+
+  <div class="result" id="resultado">Preencha e clique em <strong>Calcular</strong>.</div>
+
+  <button class="secondary" onclick="calcular()">Calcular</button>
+  <button onclick="enviar()">Enviar simulação no WhatsApp</button>
+
+  <p class="muted">
+    Ao enviar, a simulação também é registrada no nosso sistema para agilizar o atendimento.
+  </p>
 </div>
 
 <div class="card">
-  <h2>Contrato de Locação (Texto Padrão)</h2>
+  <h2>Contrato de Locação (Resumo)</h2>
 
   <div class="contract">
-CONTRATO DE LOCAÇÃO DE EQUIPAMENTO DE IMPRESSÃO
-
-Pelo presente instrumento particular, de um lado, CASA DA IMPRESSORA, doravante denominada “LOCADORA”, e, de outro lado, o(a) CONTRATANTE identificado(a) no ato da contratação, doravante denominado(a) “LOCATÁRIO(A)”, têm entre si justo e contratado o que segue:
+CONTRATO DE LOCAÇÃO DE EQUIPAMENTO DE IMPRESSÃO (RESUMO)
 
 1. OBJETO
-1.1. O presente contrato tem como objeto a locação de 01 (um) equipamento de impressão modelo HP OfficeJet Pro 8610, com sistema de tinta de alto rendimento, incluindo prestação de manutenção e fornecimento de tintas, conforme condições deste instrumento.
+Locação de equipamento de impressão modelo HP OfficeJet Pro 8610, com finalidade de impressão colorida.
 
-2. VALOR, MENSALIDADE E FRANQUIA
-2.1. O LOCATÁRIO pagará à LOCADORA o valor mensal de R$ 500,00 (quinhentos reais).
-2.2. O plano inclui franquia de 5.000 (cinco mil) páginas por mês.
-2.3. Páginas excedentes à franquia serão cobradas pelo valor unitário de R$ 0,12 (doze centavos) por página adicional.
-2.4. A apuração de páginas será realizada por contagem do equipamento (contador interno) e/ou relatório técnico, quando necessário.
+2. VIGÊNCIA
+Contrato com prazo mínimo de 12 (doze) meses, contados a partir da data de entrega/instalação do equipamento.
 
-3. PRAZO E VIGÊNCIA
-3.1. O prazo mínimo de vigência é de 12 (doze) meses, contados a partir da data de entrega/instalação do equipamento.
-3.2. Ao término do prazo mínimo, o contrato poderá ser renovado mediante acordo entre as partes.
+3. VALOR E FRANQUIA
+3.1. Valor mensal: R$ 500,00 (quinhentos reais).
+3.2. Franquia: 5.000 (cinco mil) páginas por mês.
+3.3. Excedente: R$ 0,12 (doze centavos) por página adicional acima da franquia.
 
-4. ENTREGA E INSTALAÇÃO
-4.1. O prazo estimado para entrega do equipamento é de até 15 (quinze) dias após a confirmação/assinatura da contratação.
-4.2. A instalação e orientações básicas de uso poderão ser realizadas pela LOCADORA (quando aplicável), em data combinada com o LOCATÁRIO.
+4. INCLUSÕES
+4.1. Manutenção preventiva e corretiva.
+4.2. Fornecimento de tintas/insumos necessários à impressão, conforme uso regular e orientações técnicas.
+4.3. Suporte técnico durante a vigência do contrato.
 
-5. MANUTENÇÃO E INSUMOS (INCLUSOS)
-5.1. Estão inclusas manutenções preventivas e corretivas relacionadas ao funcionamento do equipamento, desde que decorrentes de uso normal.
-5.2. Estão inclusas as tintas necessárias ao funcionamento dentro do padrão de uso previsto, incluindo reposição conforme disponibilidade e programação de atendimento.
-5.3. Não estão inclusos: papel, energia elétrica, rede/roteador do cliente, e quaisquer adaptações elétricas/estruturais no local.
+5. TROCA DE EQUIPAMENTO
+Em caso de falha que impeça o funcionamento e não seja possível reparo em prazo razoável, a LOCADORA poderá substituir o equipamento por outro equivalente, sem custo adicional de locação.
 
-6. TROCA DO EQUIPAMENTO
-6.1. Em caso de falha técnica que impeça o funcionamento e não seja possível reparo em prazo razoável, a LOCADORA poderá substituir o equipamento por outro de características equivalentes, sem custo adicional de locação.
-6.2. A troca não se aplica a danos causados por mau uso, quedas, infiltração, líquidos, violação, ou qualquer intervenção não autorizada.
+6. OBRIGAÇÕES DO CLIENTE
+6.1. Utilizar o equipamento conforme orientação e boas práticas.
+6.2. Zelar pela integridade do equipamento, evitando quedas, umidade excessiva, adulterações e intervenções de terceiros.
+6.3. Informar prontamente qualquer falha para suporte.
 
-7. OBRIGAÇÕES DO LOCATÁRIO
-7.1. Utilizar o equipamento corretamente, seguindo orientações repassadas.
-7.2. Zelar pelo equipamento, mantendo-o em local adequado, evitando umidade, poeira excessiva e calor.
-7.3. Não abrir, não violar lacres e não permitir manutenção por terceiros sem autorização da LOCADORA.
-7.4. Informar à LOCADORA qualquer anomalia assim que constatada.
+7. ENTREGA E INSTALAÇÃO
+Prazo estimado de até 15 (quinze) dias após a confirmação/assinatura para entrega e instalação.
 
-8. LIMITAÇÕES E EXCLUSÕES
-8.1. Problemas causados por: mau uso, quedas, uso de insumos não fornecidos/autorizados, instalações elétricas inadequadas, surtos, raio, líquidos e intervenções de terceiros poderão gerar cobrança de reparo e/ou substituição.
-8.2. A franquia e o excedente referem-se à contagem de páginas impressas, independentemente do conteúdo.
+8. RESCISÃO
+8.1. Rescisão antes do prazo mínimo pode gerar multa proporcional ao período restante, conforme condições do contrato completo.
+8.2. Em caso de inadimplência, a LOCADORA poderá suspender o suporte e/ou recolher o equipamento, conforme previsto no contrato.
 
-9. RESCISÃO
-9.1. Em caso de rescisão antes do prazo mínimo, poderá ser cobrada multa proporcional ao período restante, conforme negociação/condição comercial aplicada no fechamento.
-9.2. Na rescisão, o equipamento deverá ser devolvido à LOCADORA em bom estado (desgaste natural aceito), sob pena de cobrança por danos.
-
-10. DISPOSIÇÕES GERAIS
-10.1. As partes elegem o foro da comarca do domicílio da LOCADORA para dirimir quaisquer dúvidas oriundas deste contrato.
-10.2. Este texto é um modelo padrão. O contrato final completo poderá conter dados do cliente, endereço de instalação, detalhes operacionais e condições específicas acordadas na contratação.
-
-Casa da Impressora — Documento padrão para análise e contratação.
+Observação: O contrato completo será enviado para assinatura após a aprovação da simulação.
   </div>
 </div>
 
@@ -177,34 +245,128 @@ Casa da Impressora — Documento padrão para análise e contratação.
 © 2026 Casa da Impressora
 </footer>
 
-<script>
-function simular(){
+<!-- Modal imagens -->
+<div class="modal" id="modal">
+  <button class="close" id="closeBtn">X</button>
+  <img id="modalImg" alt="Imagem ampliada">
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import {
+  collection, addDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* ====== Galeria modal ====== */
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("modalImg");
+const closeBtn = document.getElementById("closeBtn");
+
+document.getElementById("gallery").addEventListener("click", (e) => {
+  const img = e.target.closest("img");
+  if (!img) return;
+  modalImg.src = img.src;
+  modal.style.display = "flex";
+});
+closeBtn.addEventListener("click", () => modal.style.display = "none");
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) modal.style.display = "none";
+});
+
+/* ====== Simulação + Firestore ====== */
+const FRANQUIA = 5000;
+const VALOR_BASE = 500;
+const VALOR_EXCEDENTE = 0.12;
+const MODELO = "HP OfficeJet Pro 8610";
+
+function onlyDigits(s){ return (s||"").toString().replace(/\D/g,""); }
+
+window.calcular = function calcular(){
   const paginas = Number(document.getElementById("paginas").value || 0);
-  const franquia = 5000;
-  const valorBase = 500;
-  const excedente = Math.max(0, paginas - franquia);
-  const custoExtra = excedente * 0.12;
-  const total = valorBase + custoExtra;
+  const excedente = Math.max(0, paginas - FRANQUIA);
+  const custoExtra = excedente * VALOR_EXCEDENTE;
+  const total = VALOR_BASE + custoExtra;
 
   document.getElementById("resultado").innerHTML = `
+    Franquia: ${FRANQUIA} páginas/mês<br>
     Excedente: ${excedente} páginas<br>
-    Valor adicional: R$ ${custoExtra.toFixed(2)}<br>
+    Valor excedente: R$ ${custoExtra.toFixed(2)}<br>
     <strong>Total estimado: R$ ${total.toFixed(2)} / mês</strong>
   `;
+};
+
+async function salvarNoFirestore(payload){
+  // grava em: locacoes
+  await addDoc(collection(db, "locacoes"), {
+    ...payload,
+    criadoEm: serverTimestamp(),
+    status: "Proposta enviada"
+  });
+}
+
+window.enviar = async function enviar(){
+  const nome = (document.getElementById("nome").value || "").trim();
+  const whatsapp = (document.getElementById("whatsapp").value || "").trim();
+  const paginas = Number(document.getElementById("paginas").value || 0);
+  const tinta = document.getElementById("tinta").value || "Tanto faz";
+  const obs = (document.getElementById("obs").value || "").trim();
+
+  if (!nome || !whatsapp || !paginas) {
+    alert("Preencha nome, WhatsApp e páginas/mês para enviar.");
+    return;
+  }
+
+  const excedente = Math.max(0, paginas - FRANQUIA);
+  const valorExcedente = excedente * VALOR_EXCEDENTE;
+  const totalMensal = VALOR_BASE + valorExcedente;
+
+  // 1) salva no Firestore
+  try {
+    await salvarNoFirestore({
+      tipo: "locacao",
+      modelo: MODELO,
+      nome,
+      whatsapp,
+      telefone: whatsapp,
+      paginasMes: paginas,
+      franquia: FRANQUIA,
+      valorBase: VALOR_BASE,
+      valorExcedenteUnit: VALOR_EXCEDENTE,
+      excedentePaginas: excedente,
+      valorExcedenteTotal: Number(valorExcedente.toFixed(2)),
+      totalMensal: Number(totalMensal.toFixed(2)),
+      tintaPreferida: tinta,
+      obs,
+      prazoEntregaDias: 15,
+      contratoMinimoMeses: 12
+    });
+  } catch (e) {
+    console.error(e);
+    alert("Permissão negada no Firestore (regras). Ajuste as regras e teste novamente.");
+    return;
+  }
+
+  // 2) abre WhatsApp com mensagem
+  const tel = onlyDigits(whatsapp);
+  const telWpp = tel.startsWith("55") ? tel : ("55" + tel);
 
   const msg = `
-Simulação de locação HP 8610:
+Simulação de locação - HP 8610
 
+Nome: ${nome}
+WhatsApp: ${whatsapp}
 Páginas/mês: ${paginas}
-Franquia: 5000 páginas
-Excedente: ${excedente} páginas
-Valor mensal estimado: R$ ${total.toFixed(2)}
+Franquia: ${FRANQUIA}
+Excedente: ${excedente}
+Total estimado: R$ ${totalMensal.toFixed(2)} / mês
+Preferência de tinta: ${tinta}
+Obs: ${obs || "-"}
 
 Gostaria de avançar com a contratação.
   `.trim();
 
   window.open("https://wa.me/5588993687542?text=" + encodeURIComponent(msg), "_blank");
-}
+};
 </script>
 
 </body>
