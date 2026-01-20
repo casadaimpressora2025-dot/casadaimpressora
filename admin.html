@@ -163,6 +163,19 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ======================
+   ELEMENTOS DO PAINEL (✅ PRECISAM EXISTIR ANTES DO AUTO-LOGIN CHAMAR carregar())
+   ====================== */
+const tbody = document.getElementById("tbody");
+const info = document.getElementById("info");
+const statusMsg = document.getElementById("statusMsg");
+
+const filtroData = document.getElementById("filtroData");
+const busca = document.getElementById("busca");
+const statusFiltro = document.getElementById("statusFiltro");
+const btnRecarregar = document.getElementById("btnRecarregar");
+const btnLimpar = document.getElementById("btnLimpar");
+
+/* ======================
    LOGIN/SENHA
    ====================== */
 
@@ -238,27 +251,9 @@ passEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") loginBtn.click();
 });
 
-// auto-login por sessão
-if (hasSession()) {
-  setLoggedIn(true);
-  carregar();
-} else {
-  setLoggedIn(false);
-}
-
 /* ======================
    PAINEL ADMIN
    ====================== */
-
-const tbody = document.getElementById("tbody");
-const info = document.getElementById("info");
-const statusMsg = document.getElementById("statusMsg");
-
-const filtroData = document.getElementById("filtroData");
-const busca = document.getElementById("busca");
-const statusFiltro = document.getElementById("statusFiltro");
-const btnRecarregar = document.getElementById("btnRecarregar");
-const btnLimpar = document.getElementById("btnLimpar");
 
 const STATUS_OPCOES = [
   "Recebido",
@@ -642,6 +637,16 @@ busca.addEventListener("input", () => {
 
 filtroData.addEventListener("change", carregar);
 statusFiltro.addEventListener("change", carregar);
+
+/* ======================
+   AUTO-LOGIN POR SESSÃO (✅ AGORA SÓ RODA DEPOIS QUE statusMsg/info/tbody EXISTEM)
+   ====================== */
+if (hasSession()) {
+  setLoggedIn(true);
+  carregar();
+} else {
+  setLoggedIn(false);
+}
 </script>
 
 </body>
