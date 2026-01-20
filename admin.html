@@ -31,6 +31,12 @@
   .ok { color:#1b7f2a; font-weight:800; }
   .err { color:#b00020; font-weight:800; }
 
+  /* Badge tipo */
+  .tag { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-weight:900; font-size:11px; border:1px solid; }
+  .tag-ag { background:#e9f2ff; color:#0b5ed7; border-color:#bcd3ff; }
+  .tag-loc { background:#fff3e0; color:#b45309; border-color:#f7c68a; }
+  .loc-row { background: #fffaf2; }
+
   /* Login */
   #loginBox {
     max-width:520px;
@@ -86,7 +92,7 @@
   <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
     <div>
       <h1 style="margin:0;">Painel Administrativo</h1>
-      <div class="muted" style="color:rgba(255,255,255,.9);">Casa da Impressora • Agendamentos (Firestore)</div>
+      <div class="muted" style="color:rgba(255,255,255,.9);">Casa da Impressora • Agendamentos + Locações</div>
     </div>
     <button id="logoutBtn">Sair</button>
   </div>
@@ -102,8 +108,17 @@
       </div>
 
       <div class="field" style="min-width:260px; flex:1;">
-        <label for="busca">Buscar (nome/telefone/modelo/OS)</label>
-        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007" />
+        <label for="busca">Buscar (nome/telefone/modelo/OS/locação)</label>
+        <input type="text" id="busca" placeholder="Ex: Samuel / 8899 / L3150 / OS-0007 / HP 8610" />
+      </div>
+
+      <div class="field">
+        <label for="tipoFiltro">Tipo</label>
+        <select id="tipoFiltro">
+          <option value="">Tudo</option>
+          <option value="agendamento">Agendamento</option>
+          <option value="locacao">Locação</option>
+        </select>
       </div>
 
       <div class="field">
@@ -117,6 +132,14 @@
           <option>Aprovado</option>
           <option>Reprovado</option>
           <option>Concluído</option>
+
+          <option>Proposta enviada</option>
+          <option>Em análise</option>
+          <option>Contrato enviado</option>
+          <option>Contrato assinado</option>
+          <option>Em entrega</option>
+          <option>Ativo</option>
+          <option>Cancelado</option>
         </select>
       </div>
 
@@ -131,16 +154,16 @@
   </div>
 
   <div class="card">
-    <h2>Agendamentos</h2>
+    <h2>Registros</h2>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>OS / Data</th>
+            <th>Tipo / Código / Data</th>
             <th>Cliente</th>
             <th>Contato</th>
-            <th>Equipamento</th>
-            <th>Problema</th>
+            <th>Equipamento / Plano</th>
+            <th>Detalhes</th>
             <th>Status</th>
             <th>Ações</th>
           </tr>
@@ -151,7 +174,7 @@
       </table>
     </div>
     <p class="muted small" style="margin-top:10px;">
-      Dica: você pode mudar o status e clicar em <strong>Salvar</strong> na mesma linha.
+      Dica: altere o status e clique em <strong>Salvar</strong>. Locações ficam destacadas.
     </p>
   </div>
 </main>
@@ -159,34 +182,17 @@
 <script type="module">
 import { db } from "./firebase.js";
 import {
-  collection, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc
+  collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* ======================
-   ELEMENTOS DO PAINEL (✅ PRECISAM EXISTIR ANTES DO AUTO-LOGIN CHAMAR carregar())
-   ====================== */
-const tbody = document.getElementById("tbody");
-const info = document.getElementById("info");
-const statusMsg = document.getElementById("statusMsg");
-
-const filtroData = document.getElementById("filtroData");
-const busca = document.getElementById("busca");
-const statusFiltro = document.getElementById("statusFiltro");
-const btnRecarregar = document.getElementById("btnRecarregar");
-const btnLimpar = document.getElementById("btnLimpar");
 
 /* ======================
    LOGIN/SENHA
    ====================== */
-
-// credenciais
 const USER_OK = "casa";
-
 // HASH SHA-256 da senha "imp153624"
 const PASS_HASH_OK = "f3dc22619a2e17bdc8ce3ca5419002320d2b596eb1829d341a321c596e9fca5d";
 
-// sessão 12h
-const SESSION_KEY = "admin_session_v2";
+const SESSION_KEY = "admin_session_v3";
 const SESSION_HOURS = 12;
 
 const loginBox = document.getElementById("loginBox");
@@ -251,18 +257,32 @@ passEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") loginBtn.click();
 });
 
-/* ======================
-   PAINEL ADMIN
-   ====================== */
+if (hasSession()) {
+  setLoggedIn(true);
+  carregar();
+} else {
+  setLoggedIn(false);
+}
 
-const STATUS_OPCOES = [
-  "Recebido",
-  "Em avaliação",
-  "Orçamento enviado",
-  "Aguardando aprovação",
-  "Aprovado",
-  "Reprovado",
-  "Concluído"
+/* ======================
+   PAINEL
+   ====================== */
+const tbody = document.getElementById("tbody");
+const info = document.getElementById("info");
+const statusMsg = document.getElementById("statusMsg");
+
+const filtroData = document.getElementById("filtroData");
+const busca = document.getElementById("busca");
+const statusFiltro = document.getElementById("statusFiltro");
+const tipoFiltro = document.getElementById("tipoFiltro");
+const btnRecarregar = document.getElementById("btnRecarregar");
+const btnLimpar = document.getElementById("btnLimpar");
+
+const STATUS_AGENDAMENTO = [
+  "Recebido","Em avaliação","Orçamento enviado","Aguardando aprovação","Aprovado","Reprovado","Concluído"
+];
+const STATUS_LOCACAO = [
+  "Proposta enviada","Em análise","Contrato enviado","Contrato assinado","Em entrega","Ativo","Cancelado"
 ];
 
 function setMsg(texto, tipo="") {
@@ -272,18 +292,6 @@ function setMsg(texto, tipo="") {
 
 function normalizar(str) {
   return (str || "").toString().toLowerCase();
-}
-
-function montarSelectStatus(valorAtual) {
-  return `
-    <select class="statusSelect">
-      ${STATUS_OPCOES.map(s => `<option ${s===valorAtual ? "selected":""}>${s}</option>`).join("")}
-    </select>
-  `;
-}
-
-function limparTabela(mensagem="Carregando...") {
-  tbody.innerHTML = `<tr><td colspan="7" class="muted">${mensagem}</td></tr>`;
 }
 
 function escapeHtml(str) {
@@ -296,9 +304,21 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
-/* ===========
-   IMPRESSÃO 2 VIAS (SÓ REDIMENSIONADO PRA CABER 1 A4)
-   =========== */
+function limparTabela(mensagem="Carregando...") {
+  tbody.innerHTML = `<tr><td colspan="7" class="muted">${mensagem}</td></tr>`;
+}
+
+function montarSelectStatus(valorAtual, tipo) {
+  const lista = (tipo === "locacao") ? STATUS_LOCACAO : STATUS_AGENDAMENTO;
+  const val = valorAtual && lista.includes(valorAtual) ? valorAtual : (lista[0] || "");
+  return `
+    <select class="statusSelect" data-tipo="${tipo}">
+      ${lista.map(s => `<option ${s===val ? "selected":""}>${s}</option>`).join("")}
+    </select>
+  `;
+}
+
+/* =========== IMPRESSÃO 2 VIAS (somente agendamento) =========== */
 function imprimirOS2Vias(dados, id) {
   const logoUrl = new URL("./logo.png", window.location.href).toString();
 
@@ -395,44 +415,31 @@ function imprimirOS2Vias(dados, id) {
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>OS ${osCurta} (2 vias)</title>
 <style>
-  /* ✅ AJUSTE PRA CABER 2 VIAS EM 1 A4 */
   @page { size: A4; margin: 6mm; }
   body { font-family: Arial, sans-serif; color:#111; margin:0; }
   .wrap { border: 2px solid #111; padding: 5mm; border-radius: 8px; }
-
   .via { page-break-inside: avoid; }
   .via-title { font-weight:900; font-size:12px; margin-bottom:6px; }
-
   .top { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
   .brand { display:flex; gap:10px; align-items:center; }
   .brand img { width: 78px; height:auto; }
-
   .title { text-align:right; }
   .title h1 { margin:0; font-size: 15px; }
   .title .small { font-size: 10px; color:#333; margin-top:3px; }
-
   .grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
-
   .box { border:1px solid #111; border-radius:8px; padding:7px; }
   .box h3 { margin:0 0 5px 0; font-size: 11px; }
-
   .line { margin: 3px 0; font-size: 10.5px; }
   .label { font-weight: 700; }
-
-  /* reduz altura mínima para não estourar a folha */
   .big { min-height: 52px; }
   .big2 { min-height: 62px; }
-
   .terms { font-size: 9.6px; color:#222; line-height:1.25; }
   .sign { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
   .sign .sigline { margin-top:14px; border-top:1px solid #111; padding-top:5px; font-size: 10px; }
   .footer { margin-top:6px; font-size: 10px; color:#333; display:flex; justify-content:space-between; }
-
   .pill { display:inline-block; padding:2px 8px; border:1px solid #111; border-radius:999px; font-weight:700; font-size:10px; }
   .note { font-size: 10px; margin-top:6px; }
-
   .corte { border:0; border-top:2px dashed #111; margin:8px 0; }
-
   .no-print { margin-top:8px; display:flex; gap:10px; }
   button { padding:8px 12px; border-radius:8px; border:1px solid #111; background:#fff; font-weight:800; cursor:pointer; font-size: 12px; }
   .primary { background:#0b5ed7; color:#fff; border-color:#0b5ed7; }
@@ -461,110 +468,165 @@ function imprimirOS2Vias(dados, id) {
   w.focus();
 }
 
+/* =========== carregar unificado =========== */
 async function carregar() {
   setMsg("");
   limparTabela("Carregando...");
   info.textContent = "Carregando do Firestore...";
 
   try {
-    let q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
-
-    if (filtroData.value) {
-      q = query(
-        collection(db, "agendamentos"),
-        where("data", "==", filtroData.value),
-        orderBy("criadoEm", "desc")
-      );
-    }
-
-    if (statusFiltro.value) {
-      if (filtroData.value) {
-        q = query(
-          collection(db, "agendamentos"),
-          where("data", "==", filtroData.value),
-          where("status", "==", statusFiltro.value),
-          orderBy("criadoEm", "desc")
-        );
-      } else {
-        q = query(
-          collection(db, "agendamentos"),
-          where("status", "==", statusFiltro.value),
-          orderBy("criadoEm", "desc")
-        );
-      }
-    }
-
-    const snap = await getDocs(q);
-
     const termo = normalizar(busca.value);
-    const rows = [];
+    const dataFiltrada = filtroData.value || "";
+    const statusFiltrado = statusFiltro.value || "";
+    const tipoFiltrado = tipoFiltro.value || ""; // "" | "agendamento" | "locacao"
 
-    snap.forEach((d) => {
-      const dados = d.data();
-      const id = d.id;
+    const itens = [];
 
-      const osCodigo = dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`;
+    // --- AGENDAMENTOS
+    if (!tipoFiltrado || tipoFiltrado === "agendamento") {
+      const qAg = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
+      const snapAg = await getDocs(qAg);
+      snapAg.forEach((d) => {
+        const dados = d.data();
+        const id = d.id;
+        itens.push({
+          tipo: "agendamento",
+          id,
+          criadoEm: dados.criadoEm?.toMillis?.() || 0,
+          data: dados.data || "",
+          nome: dados.nome || "",
+          telefone: dados.telefone || "",
+          modelo: dados.modelo || "",
+          tipoEquip: dados.tipo || "",
+          problema: dados.problema || "",
+          status: dados.status || "Recebido",
+          osCodigo: dados.osCodigo || `OS-${id.slice(0,6).toUpperCase()}`
+        });
+      });
+    }
 
-      const haystack = normalizar(
-        `${osCodigo} ${dados.nome} ${dados.telefone} ${dados.modelo} ${dados.tipo} ${dados.problema} ${dados.data} ${dados.status}`
-      );
-      if (termo && !haystack.includes(termo)) return;
+    // --- LOCAÇÕES
+    if (!tipoFiltrado || tipoFiltrado === "locacao") {
+      const qLoc = query(collection(db, "locacoes"), orderBy("criadoEm", "desc"));
+      const snapLoc = await getDocs(qLoc);
+      snapLoc.forEach((d) => {
+        const dados = d.data();
+        const id = d.id;
+        itens.push({
+          tipo: "locacao",
+          id,
+          criadoEm: dados.criadoEm?.toMillis?.() || 0,
+          data: dados.data || dados.dataSolicitacao || "",
+          nome: dados.nome || dados.cliente || "",
+          telefone: dados.telefone || dados.whatsapp || "",
+          modelo: dados.modelo || "HP OfficeJet Pro 8610",
+          tipoEquip: dados.plano || "Locação",
+          problema: dados.obs || dados.paginasMes ? `Páginas/mês: ${dados.paginasMes}` : (dados.observacoes || ""),
+          status: dados.status || "Proposta enviada",
+          codigo: dados.locacaoCodigo || `LOC-${id.slice(0,6).toUpperCase()}`
+        });
+      });
+    }
 
-      const tel = (dados.telefone || "").replace(/\D/g, "");
+    // Ordena por criadoEm desc
+    itens.sort((a,b) => (b.criadoEm||0) - (a.criadoEm||0));
+
+    // Filtra localmente por data/status/busca
+    const filtrados = itens.filter((it) => {
+      if (dataFiltrada && (it.data || "") !== dataFiltrada) return false;
+      if (statusFiltrado && (it.status || "") !== statusFiltrado) return false;
+
+      if (termo) {
+        const hay = normalizar([
+          it.tipo,
+          it.nome,
+          it.telefone,
+          it.modelo,
+          it.tipoEquip,
+          it.problema,
+          it.status,
+          it.osCodigo || it.codigo || "",
+          it.data
+        ].join(" "));
+        if (!hay.includes(termo)) return false;
+      }
+      return true;
+    });
+
+    if (!filtrados.length) {
+      limparTabela("Nenhum registro encontrado com esses filtros.");
+      info.textContent = "0 resultados.";
+      return;
+    }
+
+    const rows = filtrados.map((it) => {
+      const isLoc = it.tipo === "locacao";
+      const tag = isLoc
+        ? `<span class="tag tag-loc">🏷️ LOCAÇÃO</span>`
+        : `<span class="tag tag-ag">🛠️ AGENDAMENTO</span>`;
+
+      const codigo = isLoc ? (it.codigo || "-") : (it.osCodigo || "-");
+
+      const tel = (it.telefone || "").replace(/\D/g, "");
       const telWpp = tel.startsWith("55") ? tel : (tel ? "55" + tel : "");
       const msgWpp = encodeURIComponent(
-        `Olá, ${dados.nome || ""}! Aqui é da Casa da Impressora.\n\nSua OS é ${osCodigo}.\nStatus: ${dados.status || ""}.\n\nSe precisar, responda por aqui.`
+        `Olá, ${it.nome || ""}! Aqui é da Casa da Impressora.\n\n${isLoc ? "Locação" : "OS"}: ${codigo}\nStatus: ${it.status || ""}\n\nSe precisar, responda por aqui.`
       );
 
-      rows.push(`
-        <tr data-id="${id}"
-            data-json="${escapeHtml(JSON.stringify({
-              osCodigo: dados.osCodigo || "",
-              osNumero: dados.osNumero || null,
-              nome: dados.nome || "",
-              telefone: dados.telefone || "",
-              data: dados.data || "",
-              modelo: dados.modelo || "",
-              tipo: dados.tipo || "",
-              problema: dados.problema || "",
-              status: dados.status || "Recebido"
-            }))}">
+      const dataJson = escapeHtml(JSON.stringify({
+        tipo: it.tipo,
+        nome: it.nome,
+        telefone: it.telefone,
+        data: it.data,
+        modelo: it.modelo,
+        tipo: it.tipoEquip,
+        problema: it.problema,
+        status: it.status,
+        osCodigo: it.osCodigo || "",
+        codigo: it.codigo || ""
+      }));
+
+      return `
+        <tr class="${isLoc ? "loc-row" : ""}" data-id="${it.id}" data-tipo="${it.tipo}" data-json="${dataJson}">
           <td>
-            <div class="pill">${escapeHtml(osCodigo)}</div>
-            <div class="muted small" style="margin-top:6px;">📅 ${escapeHtml(dados.data || "-")}</div>
+            ${tag}
+            <div style="margin-top:6px;">
+              <span class="pill">${escapeHtml(codigo)}</span>
+            </div>
+            <div class="muted small" style="margin-top:6px;">📅 ${escapeHtml(it.data || "-")}</div>
           </td>
-          <td><strong>${escapeHtml(dados.nome || "-")}</strong></td>
+
+          <td><strong>${escapeHtml(it.nome || "-")}</strong></td>
+
           <td>
-            <div>${escapeHtml(dados.telefone || "-")}</div>
+            <div>${escapeHtml(it.telefone || "-")}</div>
             ${telWpp ? `<a class="small" href="https://wa.me/${telWpp}?text=${msgWpp}" target="_blank">Abrir WhatsApp</a>` : ""}
           </td>
+
           <td>
-            <div><strong>${escapeHtml(dados.modelo || "-")}</strong></div>
-            <div class="muted small">${escapeHtml(dados.tipo || "-")}</div>
+            <div><strong>${escapeHtml(it.modelo || "-")}</strong></div>
+            <div class="muted small">${escapeHtml(it.tipoEquip || "-")}</div>
           </td>
-          <td class="small">${escapeHtml(dados.problema || "—")}</td>
+
+          <td class="small">${escapeHtml(it.problema || "—")}</td>
+
           <td>
-            ${montarSelectStatus(dados.status || "Recebido")}
+            ${montarSelectStatus(it.status, it.tipo)}
           </td>
+
           <td>
             <div class="row-actions">
-              <button class="btn-ghost imprimirBtn">Imprimir 2 vias</button>
+              ${isLoc ? "" : `<button class="btn-ghost imprimirBtn">Imprimir 2 vias</button>`}
               <button class="btn salvarBtn">Salvar</button>
               <button class="btn-danger excluirBtn">Excluir</button>
             </div>
           </td>
         </tr>
-      `);
+      `;
     });
 
-    if (!rows.length) {
-      limparTabela("Nenhum agendamento encontrado com esses filtros.");
-      info.textContent = "0 resultados.";
-      return;
-    }
-
     tbody.innerHTML = rows.join("");
-    info.textContent = `${rows.length} agendamento(s) exibido(s).`;
+    info.textContent = `${filtrados.length} registro(s) exibido(s).`;
   } catch (err) {
     console.error(err);
     limparTabela("Erro ao carregar. Veja o Console (F12).");
@@ -578,7 +640,9 @@ tbody.addEventListener("click", async (e) => {
   if (!tr) return;
 
   const id = tr.getAttribute("data-id");
+  const tipo = tr.getAttribute("data-tipo"); // agendamento | locacao
   const select = tr.querySelector(".statusSelect");
+  const col = (tipo === "locacao") ? "locacoes" : "agendamentos";
 
   if (e.target.classList.contains("imprimirBtn")) {
     try {
@@ -594,10 +658,9 @@ tbody.addEventListener("click", async (e) => {
   }
 
   if (e.target.classList.contains("salvarBtn")) {
-    const novoStatus = select.value;
-
+    const novoStatus = select?.value || "";
     try {
-      await updateDoc(doc(db, "agendamentos", id), { status: novoStatus });
+      await updateDoc(doc(db, col, id), { status: novoStatus });
       setMsg("Status atualizado com sucesso ✅", "ok");
       await carregar();
     } catch (err) {
@@ -607,12 +670,12 @@ tbody.addEventListener("click", async (e) => {
   }
 
   if (e.target.classList.contains("excluirBtn")) {
-    const ok = confirm("Tem certeza que deseja excluir esse agendamento?");
+    const ok = confirm("Tem certeza que deseja excluir esse registro?");
     if (!ok) return;
 
     try {
-      await deleteDoc(doc(db, "agendamentos", id));
-      setMsg("Agendamento excluído ✅", "ok");
+      await deleteDoc(doc(db, col, id));
+      setMsg("Registro excluído ✅", "ok");
       await carregar();
     } catch (err) {
       console.error(err);
@@ -627,6 +690,7 @@ btnLimpar.addEventListener("click", () => {
   filtroData.value = "";
   busca.value = "";
   statusFiltro.value = "";
+  tipoFiltro.value = "";
   carregar();
 });
 
@@ -637,16 +701,7 @@ busca.addEventListener("input", () => {
 
 filtroData.addEventListener("change", carregar);
 statusFiltro.addEventListener("change", carregar);
-
-/* ======================
-   AUTO-LOGIN POR SESSÃO (✅ AGORA SÓ RODA DEPOIS QUE statusMsg/info/tbody EXISTEM)
-   ====================== */
-if (hasSession()) {
-  setLoggedIn(true);
-  carregar();
-} else {
-  setLoggedIn(false);
-}
+tipoFiltro.addEventListener("change", carregar);
 </script>
 
 </body>
