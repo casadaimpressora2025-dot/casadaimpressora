@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Google tag (gtag.js) - MESMO ID DO SEU SITE -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17875803657"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-17875803657');
+</script>
+
+<title>Impressão Personalizada | Casa da Impressora</title>
+
+<style>
+:root{
+  --preto:#000;
+  --azul:#0b3c5d;
+  --azul2:#0b5ed7;
+  --dourado:#e1c16e;
+  --cinza:#f2f2f2;
+  --verde:#25D366;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cinza);
+  color:#222;
+}
+
+header{
+  background:#fff;
+  padding:18px 16px;
+}
+
+.topo{
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  gap:18px;
+  align-items:center;
+}
+
+.logo img{ width:160px; }
+
+.hero{
+  flex:1;
+  border-radius:14px;
+  overflow:hidden;
+  position:relative;
+  min-height:260px;
+  background:
+    linear-gradient(135deg, rgba(11,60,93,.88), rgba(11,94,215,.72)),
+    url('banner.jpg') center/cover no-repeat;
+}
+
+.hero-inner{
+  padding:26px;
+  color:#fff;
+  max-width:680px;
+}
+
+.hero h1{
+  margin:0 0 8px;
+  font-size:32px;
+  line-height:1.1;
+  letter-spacing:-0.3px;
+}
+
+.hero p{
+  margin:0;
+  font-size:16px;
+  line-height:1.5;
+  opacity:.95;
+}
+
+.badges{
+  margin-top:14px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background: rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.22);
+  font-weight:800;
+  font-size:12px;
+}
+
+.cta-wrap{
+  max-width:1200px;
+  margin:-18px auto 0;
+  padding:0 16px;
+  display:grid;
+  grid-template-columns: 1.3fr .7fr;
+  gap:12px;
+}
+
+.cta-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  padding:18px 16px;
+  border-radius:14px;
+  text-decoration:none;
+  font-weight:900;
+  color:#fff;
+  background: linear-gradient(135deg, var(--verde), #1fb65a);
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+  border:2px solid rgba(255,255,255,.35);
+  animation:pulse 1.8s infinite;
+  text-align:center;
+  font-size:18px;
+}
+
+.cta-btn small{
+  display:block;
+  font-weight:700;
+  opacity:.92;
+  font-size:13px;
+  margin-top:6px;
+}
+
+.cta-alt{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  padding:18px 16px;
+  border-radius:14px;
+  text-decoration:none;
+  font-weight:900;
+  color:#fff;
+  background: linear-gradient(135deg, var(--azul), var(--azul2));
+  box-shadow:0 12px 25px rgba(0,0,0,.12);
+  border:2px solid rgba(255,255,255,.25);
+  text-align:center;
+  font-size:16px;
+}
+
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(37,211,102,.45), 0 12px 25px rgba(0,0,0,.18); }
+  70%{ box-shadow:0 0 0 18px rgba(37,211,102,0), 0 12px 25px rgba(0,0,0,.18); }
+  100%{ box-shadow:0 0 0 0 rgba(37,211,102,0), 0 12px 25px rgba(0,0,0,.18); }
+}
+
+section{
+  max-width:1100px;
+  margin:18px auto;
+  padding:0 16px;
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:20px;
+  box-shadow:0 0 12px rgba(0,0,0,.08);
+}
+
+.h2{
+  margin:0 0 12px;
+  color:var(--azul);
+  border-left:6px solid var(--dourado);
+  padding-left:12px;
+  font-size:22px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:12px;
+}
+
+.item{
+  border:1px solid #eee;
+  border-radius:14px;
+  padding:14px;
+  background:#fff;
+}
+
+.item b{ display:block; margin-bottom:6px; }
+.item p{ margin:0; color:#444; line-height:1.45; font-size:14px; }
+
+.steps{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+}
+
+.step{
+  background:#f7f9fc;
+  border:1px solid #e7eefc;
+  border-radius:14px;
+  padding:14px;
+}
+
+.step .n{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--azul2); color:#fff; font-weight:900;
+  margin-bottom:10px;
+}
+
+.step p{ margin:0; color:#333; line-height:1.45; font-size:14px; }
+
+.gallery{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap:12px;
+}
+
+.ph{
+  border-radius:14px;
+  background: linear-gradient(135deg, #e9f2ff, #f7f9fc);
+  border:1px dashed #bcd3ff;
+  min-height:140px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:#0b5ed7;
+  font-weight:900;
+  padding:12px;
+}
+
+.note{
+  margin-top:10px;
+  color:#666;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+label{ font-weight:800; font-size:13px; color:#123; display:block; margin-top:10px; }
+input, select, textarea{
+  width:100%;
+  padding:12px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+textarea{ resize:vertical; min-height:90px; }
+
+.form-actions{
+  margin-top:12px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  flex:1;
+  min-width:220px;
+  padding:14px 16px;
+  border-radius:12px;
+  border:none;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn-wpp{ background:var(--verde); color:#fff; }
+.btn-wpp:hover{ filter:brightness(.96); }
+.btn-outline{
+  background:#e9f2ff; color:#0b5ed7;
+  border:1px solid #bcd3ff;
+}
+.btn-outline:hover{ filter:brightness(.98); }
+
+.footer-links{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:10px;
+}
+.footer-links a{
+  text-decoration:none;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:900;
+  background:var(--azul);
+}
+.footer-links a:hover{ filter:brightness(.95); }
+
+footer{
+  margin-top:22px;
+  background:var(--preto);
+  color:#fff;
+  text-align:center;
+  padding:18px;
+}
+
+@media (max-width: 980px){
+  .grid{ grid-template-columns: repeat(2, 1fr); }
+  .steps{ grid-template-columns: 1fr; }
+  .cta-wrap{ grid-template-columns: 1fr; margin-top:12px; }
+  .hero h1{ font-size:28px; }
+}
+@media (max-width: 780px){
+  .topo{ flex-direction:column; align-items:stretch; }
+  .logo{ display:flex; justify-content:center; }
+  .hero{ min-height:240px; }
+  .form-grid{ grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="topo">
+    <div class="logo">
+      <img src="logo.png" alt="Casa da Impressora">
+    </div>
+
+    <div class="hero">
+      <div class="hero-inner">
+        <h1>Impressão Personalizada com Qualidade Profissional</h1>
+        <p>
+          Adesivos, etiquetas, apostilas, encadernações e impressão em geral — tudo sob medida.
+          Você chama no WhatsApp, manda a arte (ou a ideia) e a gente produz.
+        </p>
+
+        <div class="badges">
+          <div class="badge">✅ Personalizado</div>
+          <div class="badge">✅ Qualidade</div>
+          <div class="badge">✅ Atendimento rápido</div>
+          <div class="badge">✅ Empresa e residência</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- CTA principal (para Ads) -->
+<div class="cta-wrap">
+  <a class="cta-btn" id="btnWppTopo" href="#" target="_blank"
+     onclick="gtag('event','click',{'event_category':'Impressao','event_label':'CTA Topo WhatsApp'});">
+    📲 Pedir Orçamento no WhatsApp
+    <small>Resposta rápida • Envie sua arte ou ideia</small>
+  </a>
+
+  <a class="cta-alt" href="index.html"
+     onclick="gtag('event','click',{'event_category':'Impressao','event_label':'CTA Topo Manutencao'});">
+    🛠️ Assistência Técnica (Manutenção)
+  </a>
+</div>
+
+<section>
+  <div class="card">
+    <div class="h2">O que fazemos</div>
+    <div class="grid">
+      <div class="item">
+        <b>🏷️ Adesivos personalizados</b>
+        <p>Recortes, tamanhos variados, para vitrines, veículos, embalagens e campanhas.</p>
+      </div>
+      <div class="item">
+        <b>🏷️ Etiquetas para produtos</b>
+        <p>Identificação, código de barras, validade, logística, e-commerce e lojas.</p>
+      </div>
+      <div class="item">
+        <b>📘 Apostilas e encadernação</b>
+        <p>Impressão + acabamento, ideal para cursos, empresas e treinamentos.</p>
+      </div>
+      <div class="item">
+        <b>🖨️ Impressão em geral</b>
+        <p>Documentos, materiais promocionais e serviços sob medida.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Importante:</b> nossos produtos são <b>personalizados</b>. Você pode enviar a arte pronta ou só a ideia
+      (a gente orienta o melhor formato).
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <div class="h2">Como funciona (simples e rápido)</div>
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <p><b>Você chama no WhatsApp</b> e diz o que precisa (adesivo, etiqueta, apostila...).</p>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <p><b>Envia a arte ou a ideia</b>. Se precisar, a gente orienta tamanho, material e acabamento.</p>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <p><b>Produzimos e entregamos</b>. Você aprova e a gente finaliza com qualidade.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <div class="h2">Galeria (coloque suas fotos aqui)</div>
+    <div class="gallery">
+      <!-- Troque esses blocos por <img src="sua-foto.jpg"> quando tiver as fotos dos serviços -->
+      <div class="ph">📷 Foto de adesivo<br>(substituir por imagem)</div>
+      <div class="ph">📷 Foto de etiqueta<br>(substituir por imagem)</div>
+      <div class="ph">📷 Foto de apostila<br>(substituir por imagem)</div>
+      <div class="ph">📷 Mais um exemplo<br>(substituir por imagem)</div>
+      <div class="ph">📷 Antes/Depois<br>(substituir por imagem)</div>
+      <div class="ph">📷 Vitrine/embalagem<br>(substituir por imagem)</div>
+    </div>
+
+    <div class="note">
+      Dica: galeria real aumenta MUITO a conversão no Google Ads. Se quiser, me manda 8–12 fotos que eu já deixo tudo no layout.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <div class="h2">Pedir orçamento (rápido)</div>
+
+    <div class="form-grid">
+      <div>
+        <label>Seu nome</label>
+        <input id="nome" type="text" placeholder="Ex: João Silva">
+      </div>
+      <div>
+        <label>WhatsApp</label>
+        <input id="tel" type="text" placeholder="Ex: 88993687542">
+      </div>
+
+      <div>
+        <label>O que você quer?</label>
+        <select id="produto">
+          <option value="Adesivo personalizado">Adesivo personalizado</option>
+          <option value="Etiqueta para produto">Etiqueta para produto</option>
+          <option value="Apostila / Encadernação">Apostila / Encadernação</option>
+          <option value="Impressão em geral">Impressão em geral</option>
+          <option value="Outro (personalizado)">Outro (personalizado)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Quantidade (aprox.)</label>
+        <input id="qtd" type="text" placeholder="Ex: 100 / 500 / 1.000">
+      </div>
+    </div>
+
+    <label>Detalhes (tamanho, material, cor, prazo, etc.)</label>
+    <textarea id="detalhes" placeholder="Ex: etiqueta 5x3cm, 1 cor, resistente à água, para 200 unidades."></textarea>
+
+    <div class="form-actions">
+      <button class="btn btn-wpp" id="btnWppForm" type="button">
+        📲 Enviar pedido no WhatsApp
+      </button>
+      <button class="btn btn-outline" id="btnLimpar" type="button">
+        Limpar
+      </button>
+    </div>
+
+    <div class="note">
+      Ao clicar em enviar, você será direcionado ao WhatsApp com a mensagem pronta.
+      Se tiver arte, envie por lá.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="card">
+    <div class="h2">Contato rápido</div>
+    <div class="footer-links">
+      <a href="https://wa.me/5588993687542" target="_blank"
+         onclick="gtag('event','click',{'event_category':'Impressao','event_label':'Contato WhatsApp Rodape'});">
+        WhatsApp
+      </a>
+      <a href="mailto:casadaimpressora2025@gmail.com">E-mail</a>
+      <a href="https://www.instagram.com/casaimpressora" target="_blank">Instagram</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Casa da Impressora • Impressão Personalizada
+</footer>
+
+<script>
+const WPP_EMPRESA = "5588993687542";
+
+function onlyDigits(s){ return (s||"").toString().replace(/\D/g,""); }
+
+function montarLinkWhatsApp(payload){
+  const msg = `
+Olá! Quero orçamento de impressão personalizada.
+
+👤 Nome: ${payload.nome}
+📞 Meu WhatsApp: ${payload.tel}
+📦 Produto: ${payload.produto}
+🔢 Quantidade: ${payload.qtd}
+📝 Detalhes: ${payload.detalhes}
+
+(Se eu tiver a arte, vou enviar aqui no WhatsApp.)
+  `.trim();
+
+  return `https://wa.me/${WPP_EMPRESA}?text=${encodeURIComponent(msg)}`;
+}
+
+// CTA topo (mensagem curta, focada em Ads)
+document.getElementById("btnWppTopo").href =
+  `https://wa.me/${WPP_EMPRESA}?text=${encodeURIComponent("Olá! Vim do Google e quero orçamento para impressão personalizada (adesivos/etiquetas/apostilas).")}`;
+
+// Form CTA
+document.getElementById("btnWppForm").addEventListener("click", () => {
+  const nome = (document.getElementById("nome").value || "").trim();
+  const tel = (document.getElementById("tel").value || "").trim();
+  const produto = document.getElementById("produto").value;
+  const qtd = (document.getElementById("qtd").value || "").trim();
+  const detalhes = (document.getElementById("detalhes").value || "").trim();
+
+  if(!nome || !tel){
+    alert("Preencha seu nome e WhatsApp para enviar.");
+    return;
+  }
+
+  const link = montarLinkWhatsApp({
+    nome,
+    tel,
+    produto,
+    qtd: qtd || "Não informado",
+    detalhes: detalhes || "Não informado"
+  });
+
+  gtag('event','click',{'event_category':'Impressao','event_label':'Formulario WhatsApp'});
+  window.open(link, "_blank");
+});
+
+document.getElementById("btnLimpar").addEventListener("click", () => {
+  document.getElementById("nome").value = "";
+  document.getElementById("tel").value = "";
+  document.getElementById("produto").value = "Adesivo personalizado";
+  document.getElementById("qtd").value = "";
+  document.getElementById("detalhes").value = "";
+});
+</script>
+
+</body>
+</html>
