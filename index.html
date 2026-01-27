@@ -89,10 +89,24 @@ header{
     font-weight:600;
 }
 
+/* AVISO DE TRANSPARÊNCIA (logo no topo do conteúdo) */
+.notice{
+    margin:18px auto 0;
+    max-width:900px;
+    padding:14px 16px;
+    background:#f7fbff;
+    border:1px solid rgba(11,60,93,.18);
+    border-radius:10px;
+    color:#17384f;
+    font-size:13px;
+    line-height:1.5;
+}
+.notice strong{color:var(--azul);}
+
 /* CONTEÚDO */
 section{
     max-width:900px;
-    margin:30px auto;
+    margin:18px auto 30px;
     padding:30px;
     background:#fff;
     border-radius:10px;
@@ -143,10 +157,6 @@ p{line-height:1.7;color:#333;}
 
 .whatsapp{background:#25D366;}
 .agendar{background:#0b5ed7;}
-.locacao{background:#e1c16e;color:#0b3c5d!important;}
-.impressao{
-    background:linear-gradient(135deg,#1f8fdd,#4facfe);
-}
 .instagram{background:#C13584;}
 .email{background:#0b3c5d;}
 
@@ -182,12 +192,19 @@ footer{
 <div class="cta-wrap">
   <div class="cta-stack">
     <a class="cta-whatsapp"
-       href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20vim%20pelo%20Google%20e%20preciso%20de%20conserto%20de%20impressora.%20Pode%20me%20ajudar%3F"
+       href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20tudo%20bem%3F%20Preciso%20de%20ajuda%20com%20uma%20impressora."
        target="_blank">
        💬 Falar com Técnico no WhatsApp
        <span>Resposta rápida • Orçamento sem compromisso</span>
     </a>
   </div>
+</div>
+
+<!-- AVISO CLARO PARA POLÍTICA (bem visível) -->
+<div class="notice">
+  <strong>Serviço técnico independente e multimarcas.</strong>
+  Não somos assistência autorizada nem suporte oficial de fabricantes.
+  Atendimento local em Crato e região.
 </div>
 
 <section>
@@ -213,7 +230,7 @@ footer{
     troca de peças e ajustes completos para residências e empresas.
   </p>
 
-  <!-- BOTÕES FINAIS -->
+  <!-- BOTÕES FINAIS (sem locação/impressão por enquanto, para evitar reprovação) -->
   <div class="buttons">
     <a class="whatsapp"
        href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20gostaria%20de%20um%20or%C3%A7amento%20para%20conserto%20de%20impressora."
@@ -223,16 +240,6 @@ footer{
 
     <a class="agendar" href="agendamento.html">
        🗓️ Agendar Avaliação
-    </a>
-
-    <a class="locacao" href="locacao.html">
-       🖨️ Locação de Impressoras
-    </a>
-
-    <!-- ✅ NOVO BOTÃO DE IMPRESSÃO -->
-    <a class="impressao"
-       href="impressao.html">
-       🖨️ Impressão Personalizada
     </a>
 
     <a class="instagram"
