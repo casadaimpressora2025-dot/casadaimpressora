@@ -13,166 +13,199 @@
   gtag('config', 'AW-17875803657');
 </script>
 
-<title>Casa da Impressora | Técnico com 12 Anos de Experiência em Crato</title>
+<title>Casa da Impressora | Manutenção de Impressoras em Crato-CE</title>
 
 <style>
 :root {
-    --preto:#000;
-    --azul:#0b3c5d;
-    --dourado:#e1c16e;
-    --cinza:#f2f2f2;
-    --whats:#25D366;
-    --whats-dark:#128C7E;
-    --print:#1f8fdd;
+  --preto:#000;
+  --azul:#0b3c5d;
+  --dourado:#e1c16e;
+  --cinza:#f2f2f2;
+  --whats:#25D366;
+  --whats-dark:#128C7E;
 }
 
 body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:var(--cinza);
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:var(--cinza);
 }
 
 /* TOPO */
 header{
-    background:#fff;
-    padding:20px;
+  background:#fff;
+  padding:20px;
 }
 
 .topo{
-    max-width:1200px;
-    margin:auto;
-    display:flex;
-    gap:20px;
-    align-items:center;
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  gap:20px;
+  align-items:center;
 }
 
 .logo img{width:160px;}
 
 .banner{
-    flex:1;
-    height:240px;
-    background:url('banner.jpg') center/cover no-repeat;
-    border-radius:10px;
+  flex:1;
+  height:240px;
+  background:url('banner.jpg') center/cover no-repeat;
+  border-radius:10px;
+}
+
+/* NAV SIMPLES */
+.nav{
+  max-width:1200px;
+  margin:12px auto 0;
+  display:flex;
+  gap:14px;
+  padding:0 20px;
+  flex-wrap:wrap;
+}
+
+.nav a{
+  color:var(--azul);
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+  background:#f7fbff;
+  border:1px solid rgba(11,60,93,.15);
+  padding:8px 10px;
+  border-radius:10px;
 }
 
 /* CTA TOPO */
 .cta-wrap{
-    display:flex;
-    justify-content:center;
-    margin-top:-15px;
-    padding:10px 15px 0;
+  display:flex;
+  justify-content:center;
+  margin-top:-15px;
+  padding:10px 15px 0;
 }
 
 .cta-stack{
-    width:100%;
-    max-width:520px;
+  width:100%;
+  max-width:520px;
+}
+
+/* Identificação (ajuda política) */
+.identity{
+  max-width:520px;
+  margin:12px auto 0;
+  text-align:center;
+  font-size:13px;
+  color:#2b2b2b;
+  line-height:1.5;
+  padding:0 12px;
 }
 
 .cta-whatsapp{
-    display:block;
-    width:100%;
-    text-align:center;
-    padding:20px;
-    border-radius:14px;
-    font-weight:900;
-    font-size:20px;
-    color:#fff;
-    text-decoration:none;
-    background:linear-gradient(135deg,var(--whats),var(--whats-dark));
-    box-shadow:0 12px 25px rgba(0,0,0,.25);
+  display:block;
+  width:100%;
+  text-align:center;
+  padding:20px;
+  border-radius:14px;
+  font-weight:900;
+  font-size:20px;
+  color:#fff;
+  text-decoration:none;
+  background:linear-gradient(135deg,var(--whats),var(--whats-dark));
+  box-shadow:0 12px 25px rgba(0,0,0,.25);
 }
 
 .cta-whatsapp span{
-    display:block;
-    margin-top:6px;
-    font-size:14px;
-    font-weight:600;
+  display:block;
+  margin-top:6px;
+  font-size:14px;
+  font-weight:600;
 }
 
-/* AVISO DE TRANSPARÊNCIA (logo no topo do conteúdo) */
+/* AVISO DE TRANSPARÊNCIA */
 .notice{
-    margin:18px auto 0;
-    max-width:900px;
-    padding:14px 16px;
-    background:#f7fbff;
-    border:1px solid rgba(11,60,93,.18);
-    border-radius:10px;
-    color:#17384f;
-    font-size:13px;
-    line-height:1.5;
+  margin:18px auto 0;
+  max-width:900px;
+  padding:14px 16px;
+  background:#f7fbff;
+  border:1px solid rgba(11,60,93,.18);
+  border-radius:10px;
+  color:#17384f;
+  font-size:13px;
+  line-height:1.5;
 }
 .notice strong{color:var(--azul);}
 
 /* CONTEÚDO */
 section{
-    max-width:900px;
-    margin:18px auto 30px;
-    padding:30px;
-    background:#fff;
-    border-radius:10px;
+  max-width:900px;
+  margin:18px auto 30px;
+  padding:30px;
+  background:#fff;
+  border-radius:10px;
 }
 
 h2{
-    color:var(--azul);
-    border-left:6px solid var(--dourado);
-    padding-left:12px;
+  color:var(--azul);
+  border-left:6px solid var(--dourado);
+  padding-left:12px;
 }
 
 p{line-height:1.7;color:#333;}
 
 /* BLOCO AUTORIDADE */
 .autoridade{
-    background:#f7fbff;
-    border:1px solid rgba(11,60,93,.2);
-    padding:20px;
-    border-radius:10px;
-    margin-bottom:20px;
+  background:#f7fbff;
+  border:1px solid rgba(11,60,93,.2);
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
 }
 
 .autoridade ul{
-    padding-left:20px;
-    margin-top:10px;
+  padding-left:20px;
+  margin-top:10px;
 }
 
 .autoridade li{
-    margin-bottom:8px;
+  margin-bottom:8px;
 }
 
 /* BOTÕES FINAIS */
 .buttons{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin-top:25px;
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:25px;
 }
 
 .buttons a{
-    text-decoration:none;
-    color:#fff;
-    padding:15px 25px;
-    border-radius:8px;
-    font-weight:800;
+  text-decoration:none;
+  color:#fff;
+  padding:15px 25px;
+  border-radius:8px;
+  font-weight:800;
 }
 
 .whatsapp{background:#25D366;}
 .agendar{background:#0b5ed7;}
 .instagram{background:#C13584;}
 .email{background:#0b3c5d;}
+.contato{background:#0b3c5d;}
 
 /* RODAPÉ */
 footer{
-    background:#000;
-    color:#fff;
-    text-align:center;
-    padding:18px;
-    font-size:13px;
+  background:#000;
+  color:#fff;
+  text-align:center;
+  padding:18px;
+  font-size:13px;
 }
+footer a{color:#fff; text-decoration:underline;}
 
 /* RESPONSIVO */
 @media(max-width:768px){
-    .topo{flex-direction:column;}
-    .banner{height:200px;}
+  .topo{flex-direction:column;}
+  .banner{height:200px;}
 }
 </style>
 </head>
@@ -184,57 +217,68 @@ footer{
     <div class="logo">
       <img src="logo.png" alt="Casa da Impressora">
     </div>
-    <div class="banner"></div>
+    <div class="banner" aria-label="Banner Casa da Impressora"></div>
   </div>
+
+  <nav class="nav" aria-label="Navegação principal">
+    <a href="index.html">Início</a>
+    <a href="contato.html">Contato</a>
+    <a href="politica.html">Política e Privacidade</a>
+  </nav>
 </header>
+
+<!-- Identificação clara (ajuda aprovação Google) -->
+<div class="identity">
+  <strong>Casa da Impressora</strong> • Manutenção de impressoras • Atendimento local em <strong>Crato-CE</strong><br>
+  Rua José Leal Neto, 68 — Seminário — Crato/CE • CNPJ: 63.826.011/0001-45
+</div>
 
 <!-- CTA PRINCIPAL -->
 <div class="cta-wrap">
   <div class="cta-stack">
     <a class="cta-whatsapp"
        href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20tudo%20bem%3F%20Preciso%20de%20ajuda%20com%20uma%20impressora."
-       target="_blank">
-       💬 Falar com Técnico no WhatsApp
+       target="_blank" rel="noopener">
+       💬 Falar no WhatsApp
        <span>Resposta rápida • Orçamento sem compromisso</span>
     </a>
   </div>
 </div>
 
-<!-- AVISO CLARO PARA POLÍTICA (bem visível) -->
+<!-- AVISO CLARO PARA POLÍTICA -->
 <div class="notice">
-  <strong>Serviço técnico independente e multimarcas.</strong>
+  <strong>Serviço independente e multimarcas.</strong>
   Não somos assistência autorizada nem suporte oficial de fabricantes.
   Atendimento local em Crato e região.
 </div>
 
 <section>
-  <h2>🛠️ Conserto de Impressoras em Crato e Região</h2>
+  <h2>🛠️ Manutenção de Impressoras em Crato e Região</h2>
 
   <div class="autoridade">
-    <strong>Por que confiar na Casa da Impressora?</strong>
+    <strong>Por que escolher a Casa da Impressora?</strong>
     <ul>
       <li>✅ <strong>12 anos de experiência</strong> em manutenção de impressoras</li>
-      <li>✅ Atendimento local em Crato</li>
-      <li>✅ Serviço técnico <strong>independente e multimarcas</strong></li>
+      <li>✅ Atendimento local em Crato e região</li>
+      <li>✅ Serviço <strong>independente e multimarcas</strong></li>
       <li>✅ Orçamento sem compromisso via WhatsApp</li>
     </ul>
   </div>
 
   <p>
-    Impressora parou, falhando ou não imprime?
-    Você fala direto com quem resolve — sem enrolação.
+    Impressora falhando, puxando papel errado, manchando ou não imprimindo?
+    Você fala direto com quem atende e resolve, com transparência e atendimento local.
   </p>
 
   <p>
     Manutenção preventiva, corretiva, limpeza técnica,
-    troca de peças e ajustes completos para residências e empresas.
+    troca de peças e ajustes para residências e empresas.
   </p>
 
-  <!-- BOTÕES FINAIS (sem locação/impressão por enquanto, para evitar reprovação) -->
   <div class="buttons">
     <a class="whatsapp"
-       href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20gostaria%20de%20um%20or%C3%A7amento%20para%20conserto%20de%20impressora."
-       target="_blank">
+       href="https://wa.me/5588993687542?text=Ol%C3%A1%2C%20gostaria%20de%20um%20or%C3%A7amento%20para%20manuten%C3%A7%C3%A3o%20de%20impressora."
+       target="_blank" rel="noopener">
        💬 Solicitar Orçamento
     </a>
 
@@ -244,7 +288,7 @@ footer{
 
     <a class="instagram"
        href="https://www.instagram.com/casaimpressora"
-       target="_blank">
+       target="_blank" rel="noopener">
        Instagram
     </a>
 
@@ -252,16 +296,22 @@ footer{
        href="mailto:casadaimpressora2025@gmail.com">
        E-mail
     </a>
+
+    <a class="contato" href="contato.html">
+       📍 Contato/Endereço
+    </a>
   </div>
 
   <p style="margin-top:18px;font-size:13px;color:#444;text-align:center;">
-    Serviço técnico independente e multimarcas. Não somos assistência autorizada de fabricantes.
+    Serviço independente e multimarcas. Não somos assistência autorizada de fabricantes.
+    Consulte <a href="politica.html">Política e Privacidade</a>.
   </p>
 </section>
 
 <footer>
-  © 2026 Casa da Impressora<br>
-  Técnico com 12 anos de experiência • Atendimento em Crato e região
+  © 2026 Casa da Impressora • Crato/CE<br>
+  Rua José Leal Neto, 68 — Seminário — Crato/CE • CNPJ: 63.826.011/0001-45<br>
+  <a href="contato.html">Contato</a> • <a href="politica.html">Política e Privacidade</a>
 </footer>
 
 </body>
